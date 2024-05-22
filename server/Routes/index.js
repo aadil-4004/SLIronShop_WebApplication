@@ -2,9 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const authController = require('../Controllers/authController');
 const userController = require('../Controllers/userController');
-const customerController = require('../Controllers/customerController'); // Import the customer controller
-const productController = require('../Controllers/productController')
-const rawmaterialController = require('../Controllers/rawmaterialController')
+const customerController = require('../Controllers/customerController'); 
+const productController = require('../Controllers/productController');
+const rawmaterialController = require('../Controllers/rawmaterialController');
 
 const cors = require('cors');
 
@@ -21,9 +21,9 @@ app.use(bodyParser.json());
 
 app.use('/api/auth', authController);
 app.use('/api/user', userController);
-app.use('/api/customers', customerController); // Route for fetching customers
-app.use('/api/product', productController)
-app.use('/api/rawmaterial', rawmaterialController)
+app.use('/api/customers', customerController);
+app.use('/api/product', productController);
+app.use('/api/rawmaterial', rawmaterialController);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Button, Label, TextInput } from "flowbite-react";
+import { Button, Label, Select, TextInput } from "flowbite-react";
 import axios from 'axios';
 
 const customStyles = {
@@ -26,8 +26,22 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     productName: product.ProductName,
     instock: product.InStock,
     price: product.Price,
-    category: product.Category,
+    category: product.Category, // This will store the CategoryID
   });
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      axios.get('http://localhost:3001/api/product/categories')
+        .then(response => {
+          setCategories(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching categories:', error);
+        });
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -102,14 +116,20 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
             <div className="mb-2 block">
               <Label htmlFor="category" value="Category" />
             </div>
-            <TextInput
+            <Select
               id="category"
               name="category"
               value={formData.category}
               onChange={handleChange}
-              placeholder="Enter category"
               required
-            />
+            >
+              <option value="">Select category</option>
+              {categories.map(category => (
+                <option key={category.CategoryID} value={category.CategoryID}>
+                  {category.CategoryName}
+                </option>
+              ))}
+            </Select>
           </div>
         </div>
         <div className="w-full mt-5">

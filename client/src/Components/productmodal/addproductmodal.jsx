@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Button, Label, TextInput } from "flowbite-react";
+import { Button, Label, Select, TextInput } from "flowbite-react";
 import axios from 'axios';
 
 const customStyles = {
@@ -29,6 +29,20 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
     category: '',
   });
 
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      axios.get('http://localhost:3001/api/product/categories')
+        .then(response => {
+          setCategories(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching categories:', error);
+        });
+    }
+  }, [isOpen]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -44,6 +58,7 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
         console.log(response.data);
         fetchProducts();
         closeModal();
+        window.location.reload(); // Reload the page
       })
       .catch(error => {
         console.error('Error adding product:', error);
@@ -102,16 +117,21 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
             <div className="mb-2 block">
               <Label htmlFor="category" value="Category" />
             </div>
-            <TextInput
+            <Select
               id="category"
               name="category"
               value={formData.category || ''}
               onChange={handleChange}
-              placeholder="Select category"
               required
-            />
+            >
+              <option value="">Select category</option>
+              {categories.map(category => (
+                <option key={category.CategoryID} value={category.CategoryID}>
+                  {category.CategoryName}
+                </option>
+              ))}
+            </Select>
           </div>
-          
         </div>
         <div className="w-full mt-5">
           <Button type="submit">Add Product</Button>

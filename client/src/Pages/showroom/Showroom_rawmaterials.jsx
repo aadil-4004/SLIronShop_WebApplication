@@ -66,34 +66,36 @@ const RawMaterial = () => {
         </div>
 
         <div className="overflow-x-auto px-10">
-          <Table hoverable>
-            <TableHead>
-              <TableHeadCell>Raw Material</TableHeadCell>
-              <TableHeadCell>Last Update</TableHeadCell>
-              <TableHeadCell>Current Stock</TableHeadCell>
-              <TableHeadCell>Unit Price</TableHeadCell>
-              <TableHeadCell>
-                <span className="sr-only">Edit</span>
-              </TableHeadCell>
-            </TableHead>
-            <TableBody className="divide-y">
-              {rawMaterials.map(rawMaterial => (
-                <TableRow key={rawMaterial.RawMaterialID} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                  <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                    {rawMaterial.RawMaterial}
-                  </TableCell>
-                  <TableCell>{new Date(rawMaterial.LastUpdate).toLocaleDateString()}</TableCell>
-                  <TableCell>{rawMaterial.CurrentStock}</TableCell>
-                  <TableCell>{rawMaterial.UnitPrice}</TableCell> {/* Display Unit Price */}
-                  <TableCell>
-                    <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openEditRawMaterialModal(rawMaterial)}>
-                      Edit
-                    </a>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="table-container" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 250px)' }}>
+            <Table hoverable>
+              <TableHead>
+                <TableHeadCell>Raw Material</TableHeadCell>
+                <TableHeadCell>Last Update</TableHeadCell>
+                <TableHeadCell>Current Stock</TableHeadCell>
+                <TableHeadCell>Unit Price</TableHeadCell>
+                <TableHeadCell>
+                  <span className="sr-only">Edit</span>
+                </TableHeadCell>
+              </TableHead>
+              <TableBody className="divide-y">
+                {rawMaterials.map(rawMaterial => (
+                  <TableRow key={rawMaterial.RawMaterialID} className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                    <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                      {rawMaterial.RawMaterial}
+                    </TableCell>
+                    <TableCell>{new Date(rawMaterial.LastUpdate).toLocaleDateString()}</TableCell>
+                    <TableCell>{rawMaterial.CurrentStock}</TableCell>
+                    <TableCell>{rawMaterial.UnitPrice}</TableCell> {/* Display Unit Price */}
+                    <TableCell>
+                      <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openEditRawMaterialModal(rawMaterial)}>
+                        Edit
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
         <AddRawMaterialModal isOpen={AddRawMaterialModalIsOpen} closeModal={closeAddRawMaterialModal} fetchRawMaterials={fetchRawMaterials} />
         {selectedRawMaterial &&
@@ -105,3 +107,4 @@ const RawMaterial = () => {
 };
 
 export default RawMaterial;
+

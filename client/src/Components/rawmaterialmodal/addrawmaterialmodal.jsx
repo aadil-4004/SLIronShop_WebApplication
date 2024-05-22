@@ -46,6 +46,8 @@ const AddRawMaterialModal = ({ isOpen, closeModal, fetchRawMaterials }) => {
       await axios.post('http://localhost:3001/api/rawmaterial', formDataWithTimestamp);
       fetchRawMaterials(); // Refresh raw materials list
       closeModal(); // Close the modal
+      window.location.reload(); // Reload the page
+
     } catch (error) {
       console.error('Error adding raw material:', error);
     }

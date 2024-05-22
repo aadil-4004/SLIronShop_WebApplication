@@ -31,7 +31,7 @@ const ShowroomNavbar = ({ activeItem }) => {
   };
 
   return (
-    <nav className='h-screen flex z-10 absolute'>
+    <nav className='h-screen fixed flex z-10'>
       <div className={`h-screen bg-white text-black ${expanded ? 'w-[200px] items-start pl-3' : 'w-20 items-center'} flex flex-col justify-between transition-all duration-500 ease-in-out shadow-lg`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}>
