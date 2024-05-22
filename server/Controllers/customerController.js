@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const connection = require('../Config/db');
+const cors = require('cors'); // Import the cors package
+
+// Enable CORS for all routes
+router.use(cors());
 
 // Fetch all customers
 router.get('/', (req, res) => {
@@ -42,22 +46,6 @@ router.put('/:customerId', (req, res) => {
         }
     });
 });
-
-// Delete a customer
-router.delete('/:customerId', (req, res) => {
-  const customerId = req.params.customerId;
-  console.log("Deleting customer with ID:", customerId); // Add this line
-  connection.query('DELETE FROM customers WHERE CustomerID = ?', [customerId], (error, results) => {
-    if (error) {
-      console.error('Error deleting customer:', error);
-      res.status(500).json({ error: 'Error deleting customer' });
-    } else {
-      console.log("Customer deleted successfully"); // Add this line
-      res.json({ message: 'Customer deleted successfully' });
-    }
-  });
-});
-
 
 
 module.exports = router;

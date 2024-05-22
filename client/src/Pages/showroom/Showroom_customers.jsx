@@ -3,8 +3,8 @@ import ShowroomNavbar from '../../Components/showroom/showroom_navbar';
 import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from "flowbite-react";
 import SearchBar from '../../Components/showroom/SearchBar';
 import { Button } from "flowbite-react";
-import AddCustomerModal from '../../Components/addcustomermodal';
-import EditCustomerModal from '../../Components/editcustomermodal';
+import AddCustomerModal from '../../Components/customermodal/addcustomermodal';
+import EditCustomerModal from '../../Components/customermodal/editcustomermodal';
 import { HiPlus } from "react-icons/hi";
 import axios from 'axios';
 
@@ -46,18 +46,6 @@ const Showroom_customers = () => {
     setSelectedCustomer(null);
   };
 
-  const deleteCustomer = (customerId) => {
-    if (window.confirm('Are you sure you want to delete this customer?')) {
-      axios.delete(`http://localhost:3001/api/customers/${customerId}`)
-      .then(response => {
-          console.log(response.data);
-          fetchCustomers();
-        })
-        .catch(error => {
-          console.error('Error deleting customer:', error);
-        });
-    }
-  };
   
   return (
     <div className="flex bg-[#F7F7F7] ">
@@ -107,11 +95,7 @@ const Showroom_customers = () => {
                       Edit
                     </a>
                   </TableCell>
-                  <TableCell>
-                    <a href="#" className="font-medium text-red-600 hover:underline dark:text-red-500" onClick={() => deleteCustomer(customer.CustomerID)}>
-                      Delete
-                    </a>
-                  </TableCell>
+                 
                 </TableRow>
               ))}
             </TableBody>

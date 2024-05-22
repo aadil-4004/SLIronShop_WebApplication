@@ -13,7 +13,8 @@ import ShowroomOrders from './Pages/showroom/Showroom_orders';
 import ShowroomCustomers from './Pages/showroom/Showroom_customers';
 import ShowroomInventory from './Pages/showroom/Showroom_inventory';
 import ShowroomSettings from './Pages/showroom/Showroom_settings';
-
+import ItemDetails from './Pages/showroom/item-details';
+import RawMaterial from './Pages/showroom/Showroom_rawmaterials';
 
 function App() {
   return (
@@ -26,11 +27,12 @@ function App() {
         <Route exact path="/admin-dashboard" element={<AdminDashbaord/>} />
         <Route exact path="/supplier-dashboard" element={<SupplierDashbaord/>} />
         <Route exact path="/catalogue" element={<Catalogue/>} />
-
         <Route exact path="/showroom-dashboard/orders" element={<ShowroomOrders/>} />
         <Route exact path="/showroom-dashboard/inventory" element={<ShowroomInventory/>} />
         <Route exact path="/showroom-dashboard/customers" element={<ShowroomCustomers/>} />
         <Route exact path="/showroom-dashboard/settings" element={<ShowroomSettings/>} />
+        <Route exact path="/item-details" element={<ItemDetails/>} /> 
+        <Route exact path="/showroom-dashboard/rawmaterials" element={<RawMaterial/>} />
 
         <Route exact path="*" element={<NotFoundPage/>} />
       </Routes>
