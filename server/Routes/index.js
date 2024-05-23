@@ -5,7 +5,7 @@ const userController = require('../Controllers/userController');
 const customerController = require('../Controllers/customerController'); 
 const productController = require('../Controllers/productController');
 const rawmaterialController = require('../Controllers/rawmaterialController');
-
+const supplierController = require('../Controllers/supplierController')
 const cors = require('cors');
 
 const app = express();
@@ -24,6 +24,7 @@ app.use('/api/user', userController);
 app.use('/api/customers', customerController);
 app.use('/api/product', productController);
 app.use('/api/rawmaterial', rawmaterialController);
+app.use('/api/suppliers', supplierController)
 
 // Error handling middleware
 app.use((err, req, res, next) => {

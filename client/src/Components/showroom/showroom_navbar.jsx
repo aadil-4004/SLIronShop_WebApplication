@@ -39,7 +39,7 @@ const ShowroomNavbar = ({ activeItem }) => {
           <img src={usericon} alt="User" className={`p-3 mt-8 mb-10 w-20`} />
           <div className={`flex flex-col ${expanded ? 'items-start' : 'items-center'} `}>
             <div className='mb-5'>
-              <a href="/showroom-dashboard" onClick={() => setActiveLink("billing")} >
+              <a href="/dashboard" onClick={() => setActiveLink("billing")} >
                 <div className={`flex p-3 ${activeLink === "billing" ? 'bg-[#AAD8E6]' : 'hover:bg-[#ADD8E6]'} rounded-lg ${expanded ? 'w-[170px]' : 'w-[50px] border-[1px] border-transparent'} ${expanded && activeLink !== "billing" ? 'border-[1px] border-gray-200' : ''} transition-all duration-500 ease-in-out`}>
                   <img src={billicon} alt="Billing" />
                   <span className={`flex-grow text-center transition-opacity ${expanded ? 'duration-[400ms] opacity-100 max-w-full' : 'duration-0 opacity-0 max-w-0'}`}>Catalogue</span>
@@ -55,10 +55,10 @@ const ShowroomNavbar = ({ activeItem }) => {
               </div>
               {showDropdown.inventory && expanded && (
                 <div className="absolute left-full top-0 mt-1 w-[170px] bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                  <a href="/showroom-dashboard/inventory" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("inventory")}>
+                  <a href="/inventory" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("inventory")}>
                     Products
                   </a>
-                  <a href="/showroom-dashboard/rawmaterials" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("rawmaterials")}>
+                  <a href="/rawmaterials" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("rawmaterials")}>
                     Raw Materials
                   </a>
                 </div>
@@ -73,10 +73,10 @@ const ShowroomNavbar = ({ activeItem }) => {
               </div>
               {showDropdown.orders && expanded && (
                 <div className="absolute left-full top-0 mt-1 w-[170px] bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                  <a href="/showroom-dashboard/orders" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("orders")}>
+                  <a href="/orders" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("orders")}>
                     Normal
                   </a>
-                  <a href="/showroom-dashboard/custom-orders" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("custom-orders")}>
+                  <a href="/custom-orders" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("custom-orders")}>
                     Customized
                   </a>
                 </div>
@@ -91,10 +91,10 @@ const ShowroomNavbar = ({ activeItem }) => {
               </div>
               {showDropdown.customers && expanded && (
                 <div className="absolute left-full top-0 mt-1 w-[170px] bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                  <a href="/showroom-dashboard/customers" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("customers")}>
+                  <a href="/customers" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("customers")}>
                     Customers
                   </a>
-                  <a href="/showroom-dashboard/suppliers" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("suppliers")}>
+                  <a href="/suppliers" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("suppliers")}>
                     Suppliers
                   </a>
                 </div>
@@ -102,7 +102,7 @@ const ShowroomNavbar = ({ activeItem }) => {
             </div>
 
             <div className='mb-5'>
-              <a href="/showroom-dashboard/settings" onClick={() => setActiveLink("settings")}>
+              <a href="/settings" onClick={() => setActiveLink("settings")}>
                 <div className={`flex p-3 ${activeLink === "settings" ? 'bg-[#0096FF]' : 'hover:bg-[#0096FF]'} rounded-lg ${expanded ? 'w-[170px]' : 'w-[50px] border-[1px] border-transparent'} ${expanded && activeLink !== "settings" ? 'border-[1px] border-gray-200' : ''} transition-all duration-500 ease-in-out`}>
                   <img src={settingsicon_n} alt="Settings" />
                   <span className={`flex-grow text-center transition-opacity ${expanded ? 'duration-[400ms] opacity-100 max-w-full' : 'duration-0 opacity-0 max-w-0'}`}>Settings</span>

@@ -5,10 +5,10 @@ const ItemDetails = ({ images }) => {
   return (
     <div className="flex bg-[#F7F7F7]"> 
       <div className='w-20 h-screen'>
-        <ShowroomNavbar activeItem={"settings"}/>
+        <ShowroomNavbar activeItem={"billing"}/>
       </div>
       <div className="">
-       Settings
+       Item Details
       </div>
     </div>
   )

@@ -26,10 +26,12 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     productName: product.ProductName,
     instock: product.InStock,
     price: product.Price,
-    category: product.Category, // This will store the CategoryID
+    category: product.Category,
+    imageFile: null, // New state for image file
   });
 
   const [categories, setCategories] = useState([]);
+  const [imageUrl, setImageUrl] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -51,17 +53,41 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setFormData({ ...formData, imageFile: file });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios.put(`http://localhost:3001/api/product/${product.ProductID}`, formData)
-      .then(response => {
-        console.log(response.data);
-        fetchProducts();
-        closeModal();
-      })
-      .catch(error => {
-        console.error('Error updating product:', error);
-      });
+    try {
+      if (formData.imageFile) {
+        // Upload image if a new image is selected
+        const imageFormData = new FormData();
+        imageFormData.append('image', formData.imageFile);
+        const imageResponse = await axios.post('http://localhost:3001/api/product/upload', imageFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        const imageUrl = imageResponse.data.imageUrl;
+        setImageUrl(imageUrl);
+      }
+
+      // Update product with image URL if applicable
+      const productData = {
+        ...formData,
+        imageFile: null, // Remove image file from formData
+        Photose: imageUrl || product.Photose, // Use the new image URL if uploaded, otherwise keep the existing one
+      };
+      await axios.put(`http://localhost:3001/api/product/${product.ProductID}`, productData);
+
+      // Fetch updated product list
+      fetchProducts();
+      closeModal();
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
   };
 
   return (
@@ -71,7 +97,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
       style={customStyles}
     >
       <h2 className='text-2xl text-center'>Edit Product</h2>
-      <form onSubmit={handleSubmit}>        
+      <form onSubmit={handleSubmit}>
         <div className="space-y-3 mt-3">
           <div>
             <div className="mb-2 block">
@@ -80,7 +106,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
             <TextInput
               id="productName"
               name="productName"
-              value={formData.productName}
+              value={formData.productName || ''}
               onChange={handleChange}
               placeholder="Enter product name"
               required
@@ -93,7 +119,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
             <TextInput
               id="instock"
               name="instock"
-              value={formData.instock}
+              value={formData.instock || ''}
               onChange={handleChange}
               placeholder="Enter quantity"
               required
@@ -106,7 +132,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
             <TextInput
               id="price"
               name="price"
-              value={formData.price}
+              value={formData.price || ''}
               onChange={handleChange}
               placeholder="Enter price"
               required
@@ -119,7 +145,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
             <Select
               id="category"
               name="category"
-              value={formData.category}
+              value={formData.category || ''}
               onChange={handleChange}
               required
             >
@@ -130,6 +156,12 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
                 </option>
               ))}
             </Select>
+          </div>
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="image" value="Image" />
+            </div>
+            <input type="file" id="image" name="image" onChange={handleImageChange} />
           </div>
         </div>
         <div className="w-full mt-5">

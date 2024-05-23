@@ -1,6 +1,5 @@
 import React from 'react'
 import SearchBar from '../../Components/showroom/SearchBar';
-import Category_tiles from '../../Components/showroom/CategoryTiles';
 import ItemTiles from '../../Components/showroom/ItemTiles';
 
 import Tile1 from '../../Assets/items/1.png';
@@ -21,15 +20,7 @@ const Catalogue = () => {
           <div className="w-[100%]">
             <SearchBar/>
             <h1 className="text-[#2B2B2B] font-semibold text-xl mx-8 mt-8 ">Choose Category</h1>
-            {/* <div className="flex justify-between mx-8">
-              <Category_tiles icon={PopularIcon} text={"Popular"} />
-              <Category_tiles icon={WallIcon} text={"Wall Tiles"} />
-              <Category_tiles icon={FloorIcon} text={"Floor Tiles"} />
-              <Category_tiles icon={ClosetIcon} text={"Water Closets"} />
-              <Category_tiles icon={BasinIcon} text={"Wash Basins"} />
-              <Category_tiles icon={BidetsIcon} text={"Bidets"} />
-              <Category_tiles icon={BathIcon} text={"Bath & Shower"} />
-            </div> */}
+           
             <div className="flex justify-end mt-8  mx-8">
               <p className="text-[#929292] text-[14px] mr-3">Sort by A-Z</p>
               <img src={DownArrowIcon} className="w-[14px] h-[14px] mt-[3px]"/>

@@ -63,10 +63,10 @@ const handleLogin = async () => {
 
     switch (UserType) {
       case 'Owner':
-        navigate('/showroom-dashboard');
+        navigate('/dashboard');
         break;
       case 'Supervisor':
-        navigate('/warehouse-dashboard');
+        navigate('/dashboard');
         break;
       case 'admin':
         navigate('/admin-dashboard');

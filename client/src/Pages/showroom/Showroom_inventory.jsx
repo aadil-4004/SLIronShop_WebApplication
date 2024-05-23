@@ -5,12 +5,14 @@ import SearchBar from '../../Components/showroom/SearchBar';
 import { Button } from "flowbite-react";
 import AddProductModal from '../../Components/productmodal/addproductmodal';
 import EditProductModal from '../../Components/productmodal/editproductmodal';
+import ViewProductModal from '../../Components/productmodal/viewproductmodal'; // Import the ViewProductModal component
 import { HiPlus } from "react-icons/hi";
 import axios from 'axios';
 
 const Showroom_inventory = () => {
   const [AddProductModalIsOpen, setAddProductModalIsOpen] = useState(false);
   const [EditProductModalIsOpen, setEditProductModalIsOpen] = useState(false);
+  const [ViewProductModalIsOpen, setViewProductModalIsOpen] = useState(false); // State for the ViewProductModal
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -19,7 +21,7 @@ const Showroom_inventory = () => {
   }, []);
 
   const fetchProducts = () => {
-    axios.get('http://localhost:3001/api/product') // Corrected endpoint
+    axios.get('http://localhost:3001/api/product')
       .then(response => {
         setProducts(response.data);
       })
@@ -46,8 +48,16 @@ const Showroom_inventory = () => {
     setSelectedProduct(null);
   };
 
-  
-  
+  const openViewProductModal = (product) => {
+    setSelectedProduct(product);
+    setViewProductModalIsOpen(true);
+  };
+
+  const closeViewProductModal = () => {
+    setViewProductModalIsOpen(false);
+    setSelectedProduct(null);
+  };
+
   return (
     <div className="flex bg-[#F7F7F7] ">
       <div className='w-20 h-screen '>
@@ -74,9 +84,7 @@ const Showroom_inventory = () => {
               <TableHeadCell>In-Stock</TableHeadCell>
               <TableHeadCell>Price</TableHeadCell>
               <TableHeadCell>Category</TableHeadCell>
-              <TableHeadCell>
-                <span className="sr-only">Edit</span>
-              </TableHeadCell>
+              <TableHeadCell>Actions</TableHeadCell> {/* Add a new table head cell for Actions */}
             </TableHead>
             <TableBody className="divide-y">
               {products.map(product => (
@@ -89,11 +97,16 @@ const Showroom_inventory = () => {
                   <TableCell>{product.Category}</TableCell>
 
                   <TableCell>
-                    <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openEditProductModal(product)}>
-                      Edit
-                    </a>
+                    <div className="flex">
+                      <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openViewProductModal(product)}>
+                        View
+                      </a>
+                      <span className="mx-2">|</span>
+                      <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openEditProductModal(product)}>
+                        Edit
+                      </a>
+                    </div>
                   </TableCell>
-                  
                 </TableRow>
               ))}
             </TableBody>
@@ -102,6 +115,9 @@ const Showroom_inventory = () => {
         <AddProductModal isOpen={AddProductModalIsOpen} closeModal={closeAddProductModal} fetchProducts={fetchProducts} />
         {selectedProduct && 
           <EditProductModal isOpen={EditProductModalIsOpen} closeModal={closeEditProductModal} fetchProducts={fetchProducts} product={selectedProduct} />
+        }
+        {selectedProduct && 
+          <ViewProductModal isOpen={ViewProductModalIsOpen} closeModal={closeViewProductModal} product={selectedProduct} />
         }
       </div>
     </div>
