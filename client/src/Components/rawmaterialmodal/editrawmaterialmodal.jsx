@@ -86,6 +86,8 @@ const EditRawMaterialModal = ({ isOpen, closeModal, fetchRawMaterials, rawMateri
               </div>
               <TextInput
                 id="quantityToAdd"
+                type='number'
+                min="0"                
                 name="quantityToAdd"
                 value={formData.quantityToAdd}
                 onChange={handleChange}

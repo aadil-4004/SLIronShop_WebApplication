@@ -82,6 +82,8 @@ const AddRawMaterialModal = ({ isOpen, closeModal, fetchRawMaterials }) => {
             <TextInput
               id="currentStock"
               name="currentStock"
+              type='number'
+              min="0"
               value={formData.currentStock || ''}
               onChange={handleChange}
               placeholder="Enter current stock"

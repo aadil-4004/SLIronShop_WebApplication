@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Button, Label, Select, TextInput } from "flowbite-react";
+import { Button } from "flowbite-react";
 import axios from 'axios';
+
+Modal.setAppElement('#root');
 
 const customStyles = {
   content: {
@@ -14,28 +16,30 @@ const customStyles = {
     maxWidth: '90%',
     width: '400px',
     maxHeight: '80%',
-    overflowY: 'auto', // Enable vertical scrolling
+    overflowY: 'auto',
   },
   overlay: {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
 };
 
-const ViewProductModal = ({ isOpen, closeModal }) => {
-  const [products, setProducts] = useState([]);
+const ViewProductModal = ({ isOpen, closeModal, product }) => {
+  const [rawMaterials, setRawMaterials] = useState([]);
 
   useEffect(() => {
-    if (isOpen) {
-      // Fetch all products
-      axios.get('http://localhost:3001/api/product')
-        .then(response => {
-          setProducts(response.data);
-        })
-        .catch(error => {
-          console.error('Error fetching products:', error);
-        });
+    if (isOpen && product) {
+      fetchRawMaterials(product.ProductID);
     }
-  }, [isOpen]);
+  }, [isOpen, product]);
+
+  const fetchRawMaterials = async (productId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/productrawmaterial/${productId}`);
+      setRawMaterials(response.data);
+    } catch (error) {
+      console.error('Error fetching raw materials data:', error);
+    }
+  };
 
   return (
     <Modal
@@ -43,18 +47,28 @@ const ViewProductModal = ({ isOpen, closeModal }) => {
       onRequestClose={closeModal}
       style={customStyles}
     >
-      <h2 className='text-2xl text-center'>View Products</h2>
-      <div>
-        {products.map(product => (
-          <div key={product.ProductID} className="mb-3">
-            <h3 className="text-lg font-semibold">{product.ProductName}</h3>
-            <p>In Stock: {product.InStock}</p>
-            <p>Price: {product.Price}</p>
-            <p>Category: {product.Category}</p>
-            <img src={product.Photose} alt={product.ProductName} style={{ maxWidth: '100%', maxHeight: '200px' }} />
-          </div>
-        ))}
-      </div>
+      <h2 className='text-2xl text-center'>View Product</h2>
+      {product ? (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">{product.ProductName}</h3>
+          <p>In Stock: {product.InStock}</p>
+          <p>Price: {product.Price}</p>
+          <p>Category: {product.Category}</p>
+          {product.Photose && <img src={product.Photose} alt={product.ProductName} style={{ maxWidth: '100%', maxHeight: '200px' }} />}
+          <h4 className="text-lg font-semibold mt-4">Raw Materials</h4>
+          {rawMaterials.length > 0 ? (
+            rawMaterials.map((rm) => (
+              <div key={rm.RawMaterialID} className="mb-2">
+                <p>{rm.RawMaterialName}: {rm.Quantity}</p>
+              </div>
+            ))
+          ) : (
+            <p>No raw materials data available.</p>
+          )}
+        </div>
+      ) : (
+        <p>No product details available.</p>
+      )}
       <div className="w-full mt-5">
         <Button onClick={closeModal}>Close</Button>
       </div>

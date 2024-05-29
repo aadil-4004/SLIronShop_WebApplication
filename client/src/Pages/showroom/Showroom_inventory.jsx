@@ -15,6 +15,7 @@ const Showroom_inventory = () => {
   const [ViewProductModalIsOpen, setViewProductModalIsOpen] = useState(false); // State for the ViewProductModal
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [rawMaterials, setRawMaterials] = useState([]);
 
   useEffect(() => {
     fetchProducts();
@@ -29,6 +30,17 @@ const Showroom_inventory = () => {
         console.error('Error fetching product data:', error);
       });
   };
+
+  const fetchRawMaterials = (productId) => {
+    axios.get(`http://localhost:3001/api/productrawmaterial/${productId}`)
+      .then(response => {
+        setRawMaterials(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching raw materials data:', error);
+      });
+  };
+  
 
   const openAddProductModal = () => {
     setAddProductModalIsOpen(true);
@@ -50,12 +62,14 @@ const Showroom_inventory = () => {
 
   const openViewProductModal = (product) => {
     setSelectedProduct(product);
+    fetchRawMaterials(product.ProductID);
     setViewProductModalIsOpen(true);
   };
 
   const closeViewProductModal = () => {
     setViewProductModalIsOpen(false);
     setSelectedProduct(null);
+    setRawMaterials([]);
   };
 
   return (
@@ -81,9 +95,10 @@ const Showroom_inventory = () => {
           <Table hoverable>
             <TableHead>
               <TableHeadCell>Product Name</TableHeadCell>
-              <TableHeadCell>In-Stock</TableHeadCell>
-              <TableHeadCell>Price</TableHeadCell>
               <TableHeadCell>Category</TableHeadCell>
+              <TableHeadCell>In-Stock</TableHeadCell>
+              <TableHeadCell>Last Update</TableHeadCell>
+              <TableHeadCell>Price</TableHeadCell>
               <TableHeadCell>Actions</TableHeadCell> {/* Add a new table head cell for Actions */}
             </TableHead>
             <TableBody className="divide-y">
@@ -92,9 +107,10 @@ const Showroom_inventory = () => {
                   <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
                     {product.ProductName}
                   </TableCell>
-                  <TableCell>{product.InStock}</TableCell>
-                  <TableCell>{product.Price}</TableCell>
                   <TableCell>{product.Category}</TableCell>
+                  <TableCell>{product.InStock}</TableCell>
+                  <TableCell>{new Date(product.LastUpdate).toDateString()}</TableCell>
+                  <TableCell>{product.Price}</TableCell>
 
                   <TableCell>
                     <div className="flex">
@@ -117,7 +133,7 @@ const Showroom_inventory = () => {
           <EditProductModal isOpen={EditProductModalIsOpen} closeModal={closeEditProductModal} fetchProducts={fetchProducts} product={selectedProduct} />
         }
         {selectedProduct && 
-          <ViewProductModal isOpen={ViewProductModalIsOpen} closeModal={closeViewProductModal} product={selectedProduct} />
+          <ViewProductModal isOpen={ViewProductModalIsOpen} closeModal={closeViewProductModal} product={selectedProduct} rawMaterials={rawMaterials} />
         }
       </div>
     </div>

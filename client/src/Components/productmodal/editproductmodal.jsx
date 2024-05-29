@@ -12,7 +12,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90%',
-    width: '400px',
+    width: '350px',
     maxHeight: '80%',
     overflowY: 'auto', // Enable vertical scrolling
   },
@@ -27,11 +27,9 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     instock: product.InStock,
     price: product.Price,
     category: product.Category,
-    imageFile: null, // New state for image file
   });
 
   const [categories, setCategories] = useState([]);
-  const [imageUrl, setImageUrl] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -53,32 +51,11 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     });
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setFormData({ ...formData, imageFile: file });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (formData.imageFile) {
-        // Upload image if a new image is selected
-        const imageFormData = new FormData();
-        imageFormData.append('image', formData.imageFile);
-        const imageResponse = await axios.post('http://localhost:3001/api/product/upload', imageFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        const imageUrl = imageResponse.data.imageUrl;
-        setImageUrl(imageUrl);
-      }
-
-      // Update product with image URL if applicable
       const productData = {
         ...formData,
-        imageFile: null, // Remove image file from formData
-        Photose: imageUrl || product.Photose, // Use the new image URL if uploaded, otherwise keep the existing one
       };
       await axios.put(`http://localhost:3001/api/product/${product.ProductID}`, productData);
 
@@ -156,12 +133,6 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
                 </option>
               ))}
             </Select>
-          </div>
-          <div>
-            <div className="mb-2 block">
-              <Label htmlFor="image" value="Image" />
-            </div>
-            <input type="file" id="image" name="image" onChange={handleImageChange} />
           </div>
         </div>
         <div className="w-full mt-5">

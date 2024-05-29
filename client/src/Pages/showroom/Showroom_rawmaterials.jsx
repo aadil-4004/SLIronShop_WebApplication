@@ -83,7 +83,7 @@ const RawMaterial = () => {
                     <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
                       {rawMaterial.RawMaterial}
                     </TableCell>
-                    <TableCell>{new Date(rawMaterial.LastUpdate).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(rawMaterial.LastUpdate).toDateString()}</TableCell>
                     <TableCell>{rawMaterial.CurrentStock}</TableCell>
                     <TableCell>{rawMaterial.UnitPrice}</TableCell> {/* Display Unit Price */}
                     <TableCell>
