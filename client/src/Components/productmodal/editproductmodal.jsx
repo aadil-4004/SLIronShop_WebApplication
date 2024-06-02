@@ -30,7 +30,6 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
   });
 
   const [rawMaterials, setRawMaterials] = useState([]);
-  const [rawMaterialLoad, setRawMaterialLoad] = useState([]);
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -52,15 +51,6 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
         .catch(error => {
           console.error('Error fetching raw materials:', error);
         });
-
-      // Fetch all available raw materials
-      axios.get('http://localhost:3001/api/rawmaterials')
-        .then(response => {
-          setRawMaterialLoad(response.data);
-        })
-        .catch(error => {
-          console.error('Error fetching raw materials:', error);
-        });
     }
   }, [isOpen, product.ProductID]);
 
@@ -72,21 +62,13 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     });
   };
 
-  const handleRawMaterialChange = (index, field, value) => {
+  const handleRawMaterialChange = (index, e) => {
+    const { name, value } = e.target;
     const updatedRawMaterials = [...rawMaterials];
     updatedRawMaterials[index] = {
       ...updatedRawMaterials[index],
-      [field]: value,
+      [name]: value,
     };
-    setRawMaterials(updatedRawMaterials);
-  };
-
-  const addRawMaterial = () => {
-    setRawMaterials([...rawMaterials, { material: '', quantity: '' }]);
-  };
-
-  const removeRawMaterial = (index) => {
-    const updatedRawMaterials = rawMaterials.filter((_, i) => i !== index);
     setRawMaterials(updatedRawMaterials);
   };
 
@@ -166,45 +148,32 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
               required
             />
           </div>
-          <div>
-            <Label value="Raw Materials" className="mb-2 block" />
-            {rawMaterials.map((rawMaterial, index) => (
-              <div key={index} className="flex space-x-3 mb-2">
-                <Select
-                  className="flex-1"
-                  value={rawMaterial.material}
-                  onChange={(e) => handleRawMaterialChange(index, 'material', e.target.value)}
-                  required
-                >
-                  <option value="">Select material</option>
-                  {rawMaterialLoad.map(material => (
-                    <option key={material.RawMaterialID} value={material.RawMaterialID}>
-                      {material.RawMaterialName}
-                    </option>
-                  ))}
-                </Select>
+          {rawMaterials.map((rawMaterial, index) => (
+            <div key={index} className="flex space-x-3">
+              <div>
+                <Label htmlFor={`material-${index}`} value="Material" className="mb-2 block" />
                 <TextInput
-                  className="w-20"
-                  type="number"
-                  min="0"
-                  placeholder="Qty"
-                  value={rawMaterial.quantity}
-                  onChange={(e) => handleRawMaterialChange(index, 'quantity', e.target.value)}
+                  id={`material-${index}`}
+                  name="material"
+                  value={rawMaterial.material}
+                  onChange={(e) => handleRawMaterialChange(index, e)}
+                  placeholder="Enter material"
                   required
                 />
-                <Button
-                  type="button"
-                  className="bg-red-500 hover:bg-red-700 w-20"
-                  onClick={() => removeRawMaterial(index)}
-                >
-                  Remove
-                </Button>
               </div>
-            ))}
-            <Button type="button" className="bg-green-500 hover:bg-green-700" onClick={addRawMaterial}>
-              Add Another Material
-            </Button>
-          </div>
+              <div>
+                <Label htmlFor={`quantity-${index}`} value="Quantity" className="mb-2 block" />
+                <TextInput
+                  id={`quantity-${index}`}
+                  name="quantity"
+                  value={rawMaterial.quantity}
+                  onChange={(e) => handleRawMaterialChange(index, e)}
+                  placeholder="Enter quantity"
+                  required
+                />
+              </div>
+            </div>
+          ))}
         </div>
         <div className="w-full mt-5">
           <Button type="submit">Update Product</Button>

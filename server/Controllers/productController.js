@@ -104,17 +104,13 @@ router.post('/', async (req, res) => {
 router.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
     const { productName, workmanCharge, mrp, category, rawMaterials } = req.body;
-  
-    if (!Array.isArray(rawMaterials)) {
-      return res.status(400).json({ error: 'rawMaterials must be an array' });
-    }
-  
+
     connection.beginTransaction((transactionError) => {
       if (transactionError) {
         console.error('Error starting transaction:', transactionError);
         return res.status(500).json({ error: 'Error starting transaction' });
       }
-  
+
       const productUpdateQuery = 'UPDATE product SET ProductName = ?, WorkmanCharge = ?, MRP = ?, Category = ? WHERE ProductID = ?';
       connection.query(productUpdateQuery, [productName, workmanCharge, mrp, category, productId], (productError) => {
         if (productError) {
@@ -123,50 +119,65 @@ router.put('/:productId', async (req, res) => {
             return res.status(500).json({ error: 'Error updating product' });
           });
         }
-  
-        const deleteOldRawMaterialsQuery = 'DELETE FROM productrawmaterial WHERE ProductID = ?';
-        connection.query(deleteOldRawMaterialsQuery, [productId], (deleteError) => {
-          if (deleteError) {
-            return connection.rollback(() => {
-              console.error('Error deleting old raw materials:', deleteError);
-              return res.status(500).json({ error: 'Error deleting old raw materials' });
-            });
-          }
-  
-          const rawMaterialQueries = rawMaterials.map(({ material, quantity }) => {
-            return new Promise((resolve, reject) => {
-              const rawMaterialQuery = 'INSERT INTO productrawmaterial (ProductID, RawMaterialID, Quantity) VALUES (?, ?, ?)';
-              connection.query(rawMaterialQuery, [productId, material, quantity], (rawMaterialError) => {
-                if (rawMaterialError) {
-                  return reject(rawMaterialError);
-                }
-                resolve();
-              });
-            });
-          });
-  
-          Promise.all(rawMaterialQueries)
-            .then(() => {
-              connection.commit((commitError) => {
-                if (commitError) {
-                  return connection.rollback(() => {
-                    console.error('Error committing transaction:', commitError);
-                    return res.status(500).json({ error: 'Error committing transaction' });
-                  });
-                }
-                res.status(200).json({ message: 'Product updated successfully' });
-              });
-            })
-            .catch((rawMaterialError) => {
+
+        if (!Array.isArray(rawMaterials) || rawMaterials.length === 0) {
+          // No raw materials provided, commit transaction and return success response
+          connection.commit((commitError) => {
+            if (commitError) {
               return connection.rollback(() => {
-                console.error('Error updating raw materials:', rawMaterialError);
-                return res.status(500).json({ error: 'Error updating raw materials' });
+                console.error('Error committing transaction:', commitError);
+                return res.status(500).json({ error: 'Error committing transaction' });
+              });
+            }
+            res.status(200).json({ message: 'Product updated successfully' });
+          });
+        } else {
+          // Raw materials provided, proceed with updating raw materials
+          const deleteOldRawMaterialsQuery = 'DELETE FROM productrawmaterial WHERE ProductID = ?';
+          connection.query(deleteOldRawMaterialsQuery, [productId], (deleteError) => {
+            if (deleteError) {
+              return connection.rollback(() => {
+                console.error('Error deleting old raw materials:', deleteError);
+                return res.status(500).json({ error: 'Error deleting old raw materials' });
+              });
+            }
+
+            const rawMaterialQueries = rawMaterials.map(({ material, quantity }) => {
+              return new Promise((resolve, reject) => {
+                const rawMaterialQuery = 'INSERT INTO productrawmaterial (ProductID, RawMaterialID, Quantity) VALUES (?, ?, ?)';
+                connection.query(rawMaterialQuery, [productId, material, quantity], (rawMaterialError) => {
+                  if (rawMaterialError) {
+                    return reject(rawMaterialError);
+                  }
+                  resolve();
+                });
               });
             });
-        });
+
+            Promise.all(rawMaterialQueries)
+              .then(() => {
+                connection.commit((commitError) => {
+                  if (commitError) {
+                    return connection.rollback(() => {
+                      console.error('Error committing transaction:', commitError);
+                      return res.status(500).json({ error: 'Error committing transaction' });
+                    });
+                  }
+                  res.status(200).json({ message: 'Product updated successfully' });
+                });
+              })
+              .catch((rawMaterialError) => {
+                return connection.rollback(() => {
+                  console.error('Error updating raw materials:', rawMaterialError);
+                  return res.status(500).json({ error: 'Error updating raw materials' });
+                });
+              });
+          });
+        }
       });
     });
-  });
+});
+
   
 
 // Fetch raw materials for a specific product
