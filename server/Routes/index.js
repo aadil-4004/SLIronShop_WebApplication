@@ -25,7 +25,7 @@ app.use('/api/user', userController);
 app.use('/api/customers', customerController);
 app.use('/api/product', productController);
 app.use('/api/rawmaterial', rawmaterialController);
-app.use('/api/suppliers', supplierController);
+app.use('/api/', supplierController);
 app.use('/api/batchrawmaterial', batchRawMaterialController)
 
 
