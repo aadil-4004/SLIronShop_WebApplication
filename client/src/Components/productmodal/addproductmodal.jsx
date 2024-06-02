@@ -24,16 +24,14 @@ const customStyles = {
 const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
   const [formData, setFormData] = useState({
     productName: '',
-    instock: '',
-    serviceCharge: '',
+    workmanCharge: '',
+    mrp: '',
     category: '',
   });
 
   const [categories, setCategories] = useState([]);
   const [rawMaterialLoad, setRawMaterialLoad] = useState([]);
-  const [rawMaterials, setRawMaterials] = useState([{ material: '', quantity: '', unitPrice: 0 }]);
-  const [rawMaterialCost, setRawMaterialCost] = useState(0);
-  const [finalPrice, setFinalPrice] = useState(0);
+  const [rawMaterials, setRawMaterials] = useState([{ material: '', quantity: '' }]);
 
   useEffect(() => {
     if (isOpen) {
@@ -55,49 +53,26 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    calculateRawMaterialCost();
-  }, [rawMaterials]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
-
-    if (name === 'serviceCharge') {
-      setFinalPrice(rawMaterialCost + parseFloat(value || 0));
-    }
   };
 
   const handleRawMaterialChange = (index, field, value) => {
     const updatedRawMaterials = rawMaterials.map((rm, i) => {
       if (i === index) {
-        const updatedMaterial = { ...rm, [field]: value };
-        if (field === 'material') {
-          const materialData = rawMaterialLoad.find(m => m.RawMaterialID === parseInt(value));
-          updatedMaterial.unitPrice = materialData ? materialData.UnitPrice : 0;
-        }
-        return updatedMaterial;
+        return { ...rm, [field]: value };
       }
       return rm;
     });
-
     setRawMaterials(updatedRawMaterials);
   };
 
-  const calculateRawMaterialCost = () => {
-    let totalCost = 0;
-    rawMaterials.forEach((rm) => {
-      totalCost += rm.unitPrice * parseFloat(rm.quantity || 0);
-    });
-    setRawMaterialCost(totalCost);
-    setFinalPrice(totalCost + parseFloat(formData.serviceCharge || 0));
-  };
-
   const addRawMaterial = () => {
-    setRawMaterials([...rawMaterials, { material: '', quantity: '', unitPrice: 0 }]);
+    setRawMaterials([...rawMaterials, { material: '', quantity: '' }]);
   };
 
   const removeRawMaterial = (index) => {
@@ -110,7 +85,6 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
     try {
       const productData = {
         ...formData,
-        price: finalPrice,
         rawMaterials,
       };
       await axios.post('http://localhost:3001/api/product', productData);
@@ -135,17 +109,6 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
               value={formData.productName || ''}
               onChange={handleChange}
               placeholder="Enter product name"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="instock" value="In-Stock" className="mb-2 block" />
-            <TextInput
-              id="instock"
-              name="instock"
-              value={formData.instock || ''}
-              onChange={handleChange}
-              placeholder="Enter quantity"
               required
             />
           </div>
@@ -206,32 +169,25 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
             </Button>
           </div>
           <div>
-            <Label htmlFor="rawMaterialCost" value="Raw Material Cost" className="mb-2 block" />
+            <Label htmlFor="workmanCharge" value="Workman Charge" className="mb-2 block" />
             <TextInput
-              id="rawMaterialCost"
-              name="rawMaterialCost"
-              value={rawMaterialCost}
-              readOnly
-            />
-          </div>
-          <div>
-            <Label htmlFor="serviceCharge" value="Service Charge" className="mb-2 block" />
-            <TextInput
-              id="serviceCharge"
-              name="serviceCharge"
-              value={formData.serviceCharge || ''}
+              id="workmanCharge"
+              name="workmanCharge"
+              value={formData.workmanCharge || ''}
               onChange={handleChange}
-              placeholder="Enter service charge"
+              placeholder="Enter workman charge"
               required
             />
           </div>
           <div>
-            <Label htmlFor="finalPrice" value="Final Price" className="mb-2 block" />
+            <Label htmlFor="mrp" value="MRP" className="mb-2 block" />
             <TextInput
-              id="finalPrice"
-              name="finalPrice"
-              value={finalPrice}
-              readOnly
+              id="mrp"
+              name="mrp"
+              value={formData.mrp || ''}
+              onChange={handleChange}
+              placeholder="Enter markup profit percentage"
+              required
             />
           </div>
         </div>

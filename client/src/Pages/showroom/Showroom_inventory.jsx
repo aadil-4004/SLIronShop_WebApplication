@@ -40,7 +40,6 @@ const Showroom_inventory = () => {
         console.error('Error fetching raw materials data:', error);
       });
   };
-  
 
   const openAddProductModal = () => {
     setAddProductModalIsOpen(true);
@@ -96,9 +95,9 @@ const Showroom_inventory = () => {
             <TableHead>
               <TableHeadCell>Product Name</TableHeadCell>
               <TableHeadCell>Category</TableHeadCell>
-              <TableHeadCell>In-Stock</TableHeadCell>
+              <TableHeadCell>Workman Charge</TableHeadCell>
+              <TableHeadCell>Markup Profit %</TableHeadCell>
               <TableHeadCell>Last Update</TableHeadCell>
-              <TableHeadCell>Price</TableHeadCell>
               <TableHeadCell>Actions</TableHeadCell> {/* Add a new table head cell for Actions */}
             </TableHead>
             <TableBody className="divide-y">
@@ -108,10 +107,9 @@ const Showroom_inventory = () => {
                     {product.ProductName}
                   </TableCell>
                   <TableCell>{product.Category}</TableCell>
-                  <TableCell>{product.InStock}</TableCell>
+                  <TableCell>{product.WorkmanCharge}</TableCell>
+                  <TableCell>{product.MRP}</TableCell>
                   <TableCell>{new Date(product.LastUpdate).toDateString()}</TableCell>
-                  <TableCell>{product.Price}</TableCell>
-
                   <TableCell>
                     <div className="flex">
                       <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openViewProductModal(product)}>
