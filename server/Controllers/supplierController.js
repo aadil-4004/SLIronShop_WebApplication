@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
 // Add a new supplier
 router.post('/', (req, res) => {
     const { supplierName, type, email, contactNum } = req.body;
-    connection.query('INSERT INTO supplier (SupplierName, Type, Email, ContactNum) VALUES (?, ?, ?, ?)',
+    connection.query('INSERT INTO supplier (SupplierName, SupplierType, Email, ContactNum) VALUES (?, ?, ?, ?)',
     [supplierName, type, email, contactNum], (error, results) => {
         if (error) {
             console.error('Error adding supplier:', error);
@@ -36,7 +36,7 @@ router.post('/', (req, res) => {
 router.put('/:supplierId', (req, res) => {
     const supplierId = req.params.supplierId;
     const { supplierName, type, email, contactNum } = req.body;
-    connection.query('UPDATE supplier SET SupplierName = ?, Type = ?, Email = ?, ContactNum = ? WHERE SupplierID = ?',
+    connection.query('UPDATE supplier SET SupplierName = ?, SupplierType = ?, Email = ?, ContactNum = ? WHERE SupplierID = ?',
     [supplierName, type, email, contactNum, supplierId], (error, results) => {
         if (error) {
             console.error('Error updating supplier:', error);

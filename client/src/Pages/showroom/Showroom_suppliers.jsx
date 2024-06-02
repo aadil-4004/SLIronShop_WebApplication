@@ -69,7 +69,7 @@ const Showroom_suppliers = () => {
           <Table hoverable>
             <TableHead>
               <TableHeadCell>Supplier Name</TableHeadCell>
-              <TableHeadCell>Type</TableHeadCell>
+              <TableHeadCell>RawMaterial Type</TableHeadCell>
               <TableHeadCell>Email</TableHeadCell>
               <TableHeadCell>Contact Number</TableHeadCell>
               <TableHeadCell>
@@ -83,7 +83,7 @@ const Showroom_suppliers = () => {
                     {supplier.SupplierName}
                   </TableCell>
                   <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                    {supplier.Type}
+                    {supplier.SupplierType}
                   </TableCell>
                   <TableCell>{supplier.Email}</TableCell>
                   <TableCell>{supplier.ContactNum}</TableCell>

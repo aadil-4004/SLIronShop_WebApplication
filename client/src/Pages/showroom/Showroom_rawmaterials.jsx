@@ -46,6 +46,16 @@ const RawMaterial = () => {
     setSelectedRawMaterial(null);
   };
 
+  const getStatus = (currentStock) => {
+    if (currentStock === 0) {
+      return <span style={{ color: 'red' }}>Out of Stock</span>;
+    } else if (currentStock < 10) {
+      return <span style={{ color: 'orange' }}>Low Stock</span>;
+    } else {
+      return <span style={{ color: 'green' }}>In Stock</span>;
+    }
+  };
+
   return (
     <div className="flex bg-[#F7F7F7]">
       <div className='w-20 h-screen'>
@@ -58,7 +68,7 @@ const RawMaterial = () => {
           <div className="flex">
             <div className="ml-auto">
               <Button onClick={openAddRawMaterialModal}>
-                Add
+                Add Raw Materials
                 <HiPlus className="ml-2 h-5 w-5" />
               </Button>
             </div>
@@ -72,7 +82,7 @@ const RawMaterial = () => {
                 <TableHeadCell>Raw Material</TableHeadCell>
                 <TableHeadCell>Last Update</TableHeadCell>
                 <TableHeadCell>Current Stock</TableHeadCell>
-                <TableHeadCell>Unit Price</TableHeadCell>
+                <TableHeadCell>Status</TableHeadCell>
                 <TableHeadCell>
                   <span className="sr-only">Edit</span>
                 </TableHeadCell>
@@ -85,10 +95,10 @@ const RawMaterial = () => {
                     </TableCell>
                     <TableCell>{new Date(rawMaterial.LastUpdate).toDateString()}</TableCell>
                     <TableCell>{rawMaterial.CurrentStock}</TableCell>
-                    <TableCell>{rawMaterial.UnitPrice}</TableCell> {/* Display Unit Price */}
+                    <TableCell>{getStatus(rawMaterial.CurrentStock)}</TableCell>
                     <TableCell>
                       <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openEditRawMaterialModal(rawMaterial)}>
-                        Edit
+                        Add Stock
                       </a>
                     </TableCell>
                   </TableRow>
@@ -107,4 +117,3 @@ const RawMaterial = () => {
 };
 
 export default RawMaterial;
-
