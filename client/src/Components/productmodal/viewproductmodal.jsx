@@ -34,6 +34,7 @@ const ViewProductModal = ({ isOpen, closeModal, product }) => {
 
   const fetchRawMaterials = async (productId) => {
     try {
+      console.log(`Fetching raw materials for product ID: ${productId}`);
       const response = await axios.get(`http://localhost:3001/api/product/${productId}/rawmaterials`);
       setRawMaterials(response.data);
     } catch (error) {

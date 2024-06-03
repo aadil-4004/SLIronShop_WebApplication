@@ -31,14 +31,14 @@ const Showroom_inventory = () => {
       });
   };
 
-  const fetchRawMaterials = (productId) => {
-    axios.get(`http://localhost:3001/api/productrawmaterial/${productId}`)
-      .then(response => {
-        setRawMaterials(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching raw materials data:', error);
-      });
+  const fetchRawMaterials = async (productId) => {
+    try {
+      console.log(`Fetching raw materials for product ID: ${productId}`);
+      const response = await axios.get(`http://localhost:3001/api/product/${productId}/rawmaterials`);
+      setRawMaterials(response.data);
+    } catch (error) {
+      console.error('Error fetching raw materials data:', error);
+    }
   };
 
   const openAddProductModal = () => {

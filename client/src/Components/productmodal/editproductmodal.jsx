@@ -28,7 +28,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     mrp: product.MRP,
     category: product.Category,
   });
-
+  const [imageFile, setImageFile] = useState(null); // New state for image file
   const [rawMaterials, setRawMaterials] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -61,6 +61,11 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
       [name]: value,
     });
   };
+
+  const handleImageChange = (e) => {
+    setImageFile(e.target.files[0]);
+  };
+
   const addRawMaterial = () => {
     setRawMaterials([...rawMaterials, { material: '', quantity: '' }]);
   };
@@ -82,12 +87,22 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formDataToSend = new FormData();
+    formDataToSend.append('productName', formData.productName);
+    formDataToSend.append('workmanCharge', formData.workmanCharge);
+    formDataToSend.append('mrp', formData.mrp);
+    formDataToSend.append('category', formData.category);
+    formDataToSend.append('rawMaterials', JSON.stringify(rawMaterials));
+    if (imageFile) {
+      formDataToSend.append('image', imageFile);
+    }
+
     try {
-      const productData = {
-        ...formData,
-        rawMaterials,
-      };
-      await axios.put(`http://localhost:3001/api/product/${product.ProductID}`, productData);
+      await axios.put(`http://localhost:3001/api/product/${product.ProductID}`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       // Fetch updated product list
       fetchProducts();
@@ -157,13 +172,22 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
             />
           </div>
           <div>
+            <Label htmlFor="image" value="Product Image" className="mb-2 block" />
+            <input
+              type="file"
+              id="image"
+              name="image"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+          </div>
+          <div>
             <h4 className="text-lg font-semibold">Raw Materials</h4>
             {rawMaterials.map((rawMaterial, index) => (
-            <div key={index} className="flex space-x-3 mb-2">
-              
-              <Label htmlFor={`material-${index}`}  />
-              <TextInput
-                  className="flex-1 "
+              <div key={index} className="flex space-x-3 mb-2">
+                <Label htmlFor={`material-${index}`} />
+                <TextInput
+                  className="flex-1"
                   id={`material-${index}`}
                   name="material"
                   value={rawMaterial.materialName}
@@ -172,11 +196,9 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
                   required
                   readonly
                 />
-              
-              
-               <Label htmlFor={`quantity-${index}`}  />
+                <Label htmlFor={`quantity-${index}`} />
                 <TextInput
-                  className="w-20 "
+                  className="w-20"
                   id={`quantity-${index}`}
                   name="quantity"
                   value={rawMaterial.quantity}
@@ -184,20 +206,19 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
                   placeholder="Enter quantity"
                   required
                 />
-                 <Button
+                <Button
                   type="button"
                   className="bg-red-500 hover:bg-red-700 w-20"
                   onClick={() => removeRawMaterial(index)}
                 >
                   Remove
                 </Button>
-            </div>
-                      
+              </div>
             ))}
             <Button type="button" className="bg-green-500 hover:bg-green-700" onClick={addRawMaterial}>
-                Add Another Material
+              Add Another Material
             </Button>
-            </div>
+          </div>
         </div>
         <div className="w-full mt-5">
           <Button type="submit">Update Product</Button>
