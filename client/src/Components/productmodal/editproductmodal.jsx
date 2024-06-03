@@ -12,7 +12,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90%',
-    width: '350px',
+    width: '450px',
     maxHeight: '80%',
     overflowY: 'auto',
   },
@@ -60,6 +60,14 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
       ...formData,
       [name]: value,
     });
+  };
+  const addRawMaterial = () => {
+    setRawMaterials([...rawMaterials, { material: '', quantity: '' }]);
+  };
+
+  const removeRawMaterial = (index) => {
+    const updatedRawMaterials = rawMaterials.filter((_, i) => i !== index);
+    setRawMaterials(updatedRawMaterials);
   };
 
   const handleRawMaterialChange = (index, e) => {
@@ -148,22 +156,27 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
               required
             />
           </div>
-          {rawMaterials.map((rawMaterial, index) => (
-            <div key={index} className="flex space-x-3">
-              <div>
-                <Label htmlFor={`material-${index}`} value="Material" className="mb-2 block" />
-                <TextInput
+          <div>
+            <h4 className="text-lg font-semibold">Raw Materials</h4>
+            {rawMaterials.map((rawMaterial, index) => (
+            <div key={index} className="flex space-x-3 mb-2">
+              
+              <Label htmlFor={`material-${index}`}  />
+              <TextInput
+                  className="flex-1 "
                   id={`material-${index}`}
                   name="material"
-                  value={rawMaterial.material}
+                  value={rawMaterial.materialName}
                   onChange={(e) => handleRawMaterialChange(index, e)}
                   placeholder="Enter material"
                   required
+                  readonly
                 />
-              </div>
-              <div>
-                <Label htmlFor={`quantity-${index}`} value="Quantity" className="mb-2 block" />
+              
+              
+               <Label htmlFor={`quantity-${index}`}  />
                 <TextInput
+                  className="w-20 "
                   id={`quantity-${index}`}
                   name="quantity"
                   value={rawMaterial.quantity}
@@ -171,9 +184,20 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
                   placeholder="Enter quantity"
                   required
                 />
-              </div>
+                 <Button
+                  type="button"
+                  className="bg-red-500 hover:bg-red-700 w-20"
+                  onClick={() => removeRawMaterial(index)}
+                >
+                  Remove
+                </Button>
             </div>
-          ))}
+                      
+            ))}
+            <Button type="button" className="bg-green-500 hover:bg-green-700" onClick={addRawMaterial}>
+                Add Another Material
+            </Button>
+            </div>
         </div>
         <div className="w-full mt-5">
           <Button type="submit">Update Product</Button>

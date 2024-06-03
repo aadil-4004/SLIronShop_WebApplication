@@ -27,6 +27,7 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
     workmanCharge: '',
     mrp: '',
     category: '',
+    image: null,
   });
 
   const [categories, setCategories] = useState([]);
@@ -61,6 +62,14 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
     });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setFormData({
+      ...formData,
+      image: file,
+    });
+  };
+
   const handleRawMaterialChange = (index, field, value) => {
     const updatedRawMaterials = rawMaterials.map((rm, i) => {
       if (i === index) {
@@ -83,14 +92,23 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const productData = {
-        ...formData,
-        rawMaterials,
-      };
-      await axios.post('http://localhost:3001/api/product', productData);
+      const productData = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        productData.append(key, value);
+      });
+      rawMaterials.forEach((rm, index) => {
+        productData.append(`rawMaterials[${index}][material]`, rm.material);
+        productData.append(`rawMaterials[${index}][quantity]`, rm.quantity);
+      });
+
+      await axios.post('http://localhost:3001/api/product', productData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       fetchProducts();
       closeModal();
-      window.location.reload(); // Reload the page
+      window.location.reload();
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -167,6 +185,10 @@ const AddProductModal = ({ isOpen, closeModal, fetchProducts }) => {
             <Button type="button" className="bg-green-500 hover:bg-green-700" onClick={addRawMaterial}>
               Add Another Material
             </Button>
+          </div>
+          <div>
+            <Label htmlFor="imageUpload" value="Upload an Image" className="mb-2 block" />
+            <input type="file" accept="image/*" onChange={handleImageChange} />
           </div>
           <div>
             <Label htmlFor="workmanCharge" value="Workman Charge" className="mb-2 block" />
