@@ -13,6 +13,8 @@ import ShowroomSettings from './Pages/showroom/Showroom_settings';
 import ItemDetails from './Pages/showroom/item-details';
 import RawMaterial from './Pages/showroom/Showroom_rawmaterials';
 import Supplier from './Pages/showroom/Showroom_suppliers';
+import Jobs from './Pages/showroom/Jobs';
+
 function App() {
   return (
     <Router>
@@ -28,6 +30,7 @@ function App() {
         <Route exact path="/item-details" element={<ItemDetails/>} /> 
         <Route exact path="/rawmaterials" element={<RawMaterial/>} />
         <Route exact path="/suppliers" element={<Supplier/>} />
+        <Route exact path="/job" element={<Jobs/>} /> 
 
         <Route exact path="*" element={<NotFoundPage/>} />
       </Routes>

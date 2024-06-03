@@ -76,8 +76,8 @@ const ShowroomNavbar = ({ activeItem }) => {
                   <a href="/orders" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("orders")}>
                     Normal
                   </a>
-                  <a href="/custom-orders" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("custom-orders")}>
-                    Customized
+                  <a href="/job" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("job")}>
+                    Jobs
                   </a>
                 </div>
               )}
