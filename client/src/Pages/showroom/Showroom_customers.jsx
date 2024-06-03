@@ -46,7 +46,6 @@ const Showroom_customers = () => {
     setSelectedCustomer(null);
   };
 
-  
   return (
     <div className="flex bg-[#F7F7F7] ">
       <div className='w-20 h-screen '>
@@ -69,8 +68,7 @@ const Showroom_customers = () => {
         <div className="overflow-x-auto px-10">
           <Table hoverable>
             <TableHead>
-              <TableHeadCell>First Name</TableHeadCell>
-              <TableHeadCell>Last Name</TableHeadCell>
+              <TableHeadCell>Customer Name</TableHeadCell>
               <TableHeadCell>Email</TableHeadCell>
               <TableHeadCell>Contact Number</TableHeadCell>
               <TableHeadCell>Address</TableHeadCell>
@@ -82,10 +80,7 @@ const Showroom_customers = () => {
               {customers.map(customer => (
                 <TableRow key={customer.CustomerID} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                   <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                    {customer.FirstName}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                    {customer.LastName}
+                    {customer.CustomerName}
                   </TableCell>
                   <TableCell>{customer.Email}</TableCell>
                   <TableCell>{customer.ContactNum}</TableCell>
@@ -95,7 +90,6 @@ const Showroom_customers = () => {
                       Edit
                     </a>
                   </TableCell>
-                 
                 </TableRow>
               ))}
             </TableBody>

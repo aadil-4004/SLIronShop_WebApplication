@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-import { Button, Label, TextInput, Alert } from "flowbite-react";
+import { Button, Label, TextInput } from "flowbite-react";
 import axios from 'axios';
 
 const customStyles = {
@@ -23,8 +23,7 @@ const customStyles = {
 
 const AddCustomerModal = ({ isOpen, closeModal, fetchCustomers }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    customerName: '',
     email: '',
     contactNum: '',
     address: '',
@@ -46,7 +45,6 @@ const AddCustomerModal = ({ isOpen, closeModal, fetchCustomers }) => {
         fetchCustomers();
         closeModal();
         window.location.reload(); // Reload the page
-
       })
       .catch(error => {
         console.error('Error adding customer:', error);
@@ -64,27 +62,14 @@ const AddCustomerModal = ({ isOpen, closeModal, fetchCustomers }) => {
         <div className="space-y-3 mt-3">
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="firstName" value="First Name" />
+              <Label htmlFor="customerName" value="Customer Name" />
             </div>
             <TextInput
-              id="firstName"
-              name="firstName"
-              value={formData.firstName || ''}
+              id="customerName"
+              name="customerName"
+              value={formData.customerName || ''}
               onChange={handleChange}
-              placeholder="Enter first name"
-              required
-            />
-          </div>
-          <div>
-            <div className="mb-2 block">
-              <Label htmlFor="lastName" value="Last Name" />
-            </div>
-            <TextInput
-              id="lastName"
-              name="lastName"
-              value={formData.lastName || ''}
-              onChange={handleChange}
-              placeholder="Enter last name"
+              placeholder="Enter customer name"
               required
             />
           </div>
@@ -134,7 +119,6 @@ const AddCustomerModal = ({ isOpen, closeModal, fetchCustomers }) => {
         </div>
       </form>
     </Modal>
-    
   );
 };
 

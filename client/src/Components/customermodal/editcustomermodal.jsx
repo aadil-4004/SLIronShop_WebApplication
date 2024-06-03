@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { Button, Label, TextInput } from "flowbite-react";
 import axios from 'axios';
@@ -23,8 +23,7 @@ const customStyles = {
 
 const EditCustomerModal = ({ isOpen, closeModal, fetchCustomers, customer }) => {
   const [formData, setFormData] = useState({
-    firstName: customer.FirstName,
-    lastName: customer.LastName,
+    customerName: customer.CustomerName,
     email: customer.Email,
     contactNum: customer.ContactNum,
     address: customer.Address,
@@ -62,27 +61,14 @@ const EditCustomerModal = ({ isOpen, closeModal, fetchCustomers, customer }) => 
         <div className="space-y-3 mt-3">
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="firstName" value="First Name" />
+              <Label htmlFor="customerName" value="Customer Name" />
             </div>
             <TextInput
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
+              id="customerName"
+              name="customerName"
+              value={formData.customerName}
               onChange={handleChange}
-              placeholder="Enter first name"
-              required
-            />
-          </div>
-          <div>
-            <div className="mb-2 block">
-              <Label htmlFor="lastName" value="Last Name" />
-            </div>
-            <TextInput
-              id="lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Enter last name"
+              placeholder="Enter customer name"
               required
             />
           </div>

@@ -20,9 +20,9 @@ router.get('/', (req, res) => {
 
 // Add a new customer
 router.post('/', (req, res) => {
-    const { firstName, lastName, email, contactNum, address } = req.body;
-    connection.query('INSERT INTO customers (FirstName, LastName, Email, ContactNum, Address) VALUES (?, ?, ?, ?, ?)',
-    [firstName, lastName, email, contactNum, address], (error, results) => {
+    const { customerName, email, contactNum, address } = req.body;
+    connection.query('INSERT INTO customers (CustomerName, Email, ContactNum, Address) VALUES (?, ?, ?, ?)',
+    [customerName, email, contactNum, address], (error, results) => {
         if (error) {
             console.error('Error adding customer:', error);
             res.status(500).json({ error: 'Error adding customer' });
@@ -35,9 +35,9 @@ router.post('/', (req, res) => {
 // Update an existing customer
 router.put('/:customerId', (req, res) => {
     const customerId = req.params.customerId;
-    const { firstName, lastName, email, contactNum, address } = req.body;
-    connection.query('UPDATE customers SET FirstName = ?, LastName = ?, Email = ?, ContactNum = ?, Address = ? WHERE CustomerID = ?',
-    [firstName, lastName, email, contactNum, address, customerId], (error, results) => {
+    const { customerName, email, contactNum, address } = req.body;
+    connection.query('UPDATE customers SET CustomerName = ?, Email = ?, ContactNum = ?, Address = ? WHERE CustomerID = ?',
+    [customerName, email, contactNum, address, customerId], (error, results) => {
         if (error) {
             console.error('Error updating customer:', error);
             res.status(500).json({ error: 'Error updating customer' });
@@ -46,6 +46,5 @@ router.put('/:customerId', (req, res) => {
         }
     });
 });
-
 
 module.exports = router;
