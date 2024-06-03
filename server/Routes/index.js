@@ -7,8 +7,9 @@ const productController = require('../Controllers/productController');
 const rawmaterialController = require('../Controllers/rawmaterialController');
 const supplierController = require('../Controllers/supplierController');
 const batchRawMaterialController = require('../Controllers/batchRawMaterialController');
+const catalogueController = require('../Controllers/catalogueController');
+
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
 const PORT = 3001;
@@ -28,7 +29,10 @@ app.use('/api/product', productController);
 app.use('/api/rawmaterial', rawmaterialController);
 app.use('/api/', supplierController);
 app.use('/api/batchrawmaterial', batchRawMaterialController)
+app.use('/api/catalogue', catalogueController);  // Updated path
+
 app.use('/uploads', express.static('uploads'));
+
 
 
 // Error handling middleware
