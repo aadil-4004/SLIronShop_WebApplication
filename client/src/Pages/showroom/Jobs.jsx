@@ -57,32 +57,30 @@ const Jobs = () => {
         </div>
 
         <div className="overflow-x-auto px-10">
-          <Table hoverable className="min-w-full bg-white dark:bg-gray-800">
+          <Table hoverable>
             <TableHead>
-              <TableRow className="border-b">
-                <TableHeadCell className="px-6 py-3">Job ID</TableHeadCell>
-                <TableHeadCell className="px-6 py-3">Customer Name</TableHeadCell>
-                <TableHeadCell className="px-6 py-3">Status</TableHeadCell>
-                <TableHeadCell className="px-6 py-3">Due Date</TableHeadCell>
-                <TableHeadCell className="px-6 py-3">Note</TableHeadCell>
-                <TableHeadCell className="px-6 py-3">Employee Name</TableHeadCell>
-                <TableHeadCell className="px-6 py-3">
+                <TableHeadCell>Job ID</TableHeadCell>
+                <TableHeadCell>Customer Name</TableHeadCell>
+                <TableHeadCell>Status</TableHeadCell>
+                <TableHeadCell>Due Date</TableHeadCell>
+                <TableHeadCell>Note</TableHeadCell>
+                <TableHeadCell>Employee Name</TableHeadCell>
+                <TableHeadCell>
                   <span className="sr-only">Edit</span>
                 </TableHeadCell>
-              </TableRow>
             </TableHead>
             <TableBody className="divide-y">
               {jobs.map((job) => (
                 <TableRow key={job.JobID} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                  <TableCell className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                  <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
                     {job.JobID}
                   </TableCell>
-                  <TableCell className="px-6 py-4">{job.CustomerName}</TableCell>
-                  <TableCell className="px-6 py-4">{job.Status}</TableCell>
-                  <TableCell className="px-6 py-4">{new Date(job.DueDate).toLocaleDateString()}</TableCell>
-                  <TableCell className="px-6 py-4">{job.Note}</TableCell>
-                  <TableCell className="px-6 py-4">{job.EmployeeName}</TableCell>
-                  <TableCell className="px-6 py-4">
+                  <TableCell>{job.CustomerName}</TableCell>
+                  <TableCell>{job.Status}</TableCell>
+                  <TableCell>{new Date(job.DueDate).toLocaleDateString()}</TableCell>
+                  <TableCell>{job.Note}</TableCell>
+                  <TableCell>{job.EmployeeName}</TableCell>
+                  <TableCell>
                     <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500">
                       Edit
                     </a>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Button, Label, Select, TextInput, Radio, Tabs } from 'flowbite-react';
+import { Tabs, Label, Radio, Button, Select, TextInput } from 'flowbite-react';
+import AddNormalJobDetails from '../jobmodal/addnormaljobmodal';
+import AddCustomizedJobDetails from '../jobmodal/addcustomizedjobmodal.';
 import axios from 'axios';
 
 const customStyles = {
@@ -25,7 +27,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [formData, setFormData] = useState({
     dueDate: '',
     status: '',
-    customerName: '',
+    customerID: '',
     note: '',
     assignedEmployee: '',
   });
@@ -33,8 +35,9 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [products, setProducts] = useState([{ product: '', quantity: '', rawMaterials: [] }]);
   const [productLoad, setProductLoad] = useState([]);
   const [productType, setProductType] = useState('Normal');
-  const [rawMaterialLoad, setRawMaterialLoad] = useState([]);
   const [rawMaterials, setRawMaterials] = useState([]);
+  const [rawMaterialLoad, setRawMaterialLoad] = useState([]);
+  const [rawMaterialBatches, setRawMaterialBatches] = useState({});
   const [customers, setCustomers] = useState([]);
   const [image, setImage] = useState(null);
 
@@ -66,14 +69,34 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
     }
   }, [isOpen]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const jobData = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        jobData.append(key, value);
+      });
+  
+      if (productType === 'Normal') {
+        jobData.append('products', JSON.stringify(products));
+      } else if (productType === 'Customized') {
+        jobData.append('rawMaterials', JSON.stringify(rawMaterials));
+        jobData.append('image', image);
+      }
+  
+      await axios.post('http://localhost:3001/api/jobs', jobData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      fetchJobs();
+      closeModal();
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding job:', error);
+    }
   };
-
+  
   const handleProductChange = async (index, field, value) => {
     const updatedProducts = products.map((product, i) => {
       if (i === index) {
@@ -100,7 +123,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
     }
   };
 
-  const handleRawMaterialChange = (index, field, value) => {
+  const handleRawMaterialChange = async (index, field, value) => {
     const updatedRawMaterials = rawMaterials.map((rm, i) => {
       if (i === index) {
         return { ...rm, [field]: value };
@@ -108,6 +131,19 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       return rm;
     });
     setRawMaterials(updatedRawMaterials);
+
+    if (field === 'material') {
+      try {
+        const response = await axios.get(`http://localhost:3001/api/rawmaterial/${value}/batches`);
+        const batches = response.data;
+        setRawMaterialBatches((prevBatches) => ({
+          ...prevBatches,
+          [value]: batches,
+        }));
+      } catch (error) {
+        console.error('Error fetching batch data:', error);
+      }
+    }
   };
 
   const addProduct = () => {
@@ -128,44 +164,6 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
     setRawMaterials(updatedRawMaterials);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const jobData = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        jobData.append(key, value);
-      });
-      if (productType === 'Normal') {
-        products.forEach((product, index) => {
-          jobData.append(`products[${index}][product]`, product.product);
-          jobData.append(`products[${index}][quantity]`, product.quantity);
-        });
-      } else if (productType === 'Customized') {
-        rawMaterials.forEach((rm, index) => {
-          jobData.append(`rawMaterials[${index}][material]`, rm.material);
-          jobData.append(`rawMaterials[${index}][quantity]`, rm.quantity);
-        });
-        jobData.append('image', image);
-      }
-
-      await axios.post('http://localhost:3001/api/jobs', jobData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      fetchJobs();
-      closeModal();
-      window.location.reload();
-    } catch (error) {
-      console.error('Error adding job:', error);
-    }
-  };
-
   return (
     <Modal isOpen={isOpen} onRequestClose={closeModal} style={customStyles}>
       <h2 className='text-2xl text-center'>Add Job</h2>
@@ -174,12 +172,12 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           <Tabs.Tab title="Job Details">
             <div className="space-y-3 mt-3">
               <div>
-                <Label htmlFor="customerName" value="Customer Name" className="mb-2 block" />
+              <Label htmlFor="customerID" value="Customer Name" className="mb-2 block" />
                 <Select
-                  id="customerName"
-                  name="customerName"
-                  value={formData.customerName}
-                  onChange={handleChange}
+                  id="customerID"
+                  name="customerID"
+                  value={formData.customerID}
+                  onChange={(e) => setFormData({ ...formData, customerID: e.target.value })}
                   required
                 >
                   <option value="">Select customer</option>
@@ -197,7 +195,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   name="dueDate"
                   type="date"
                   value={formData.dueDate}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                   required
                 />
               </div>
@@ -207,7 +205,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   id="status"
                   name="status"
                   value={formData.status}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   required
                 >
                   <option value="">Select status</option>
@@ -224,7 +222,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   type="text"
                   placeholder='Enter Special Notes about the Job'
                   value={formData.note}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                 />
               </div>
               <div>
@@ -235,7 +233,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   type="text"
                   placeholder='Employee Name'
                   value={formData.assignedEmployee}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData({ ...formData, assignedEmployee: e.target.value })}
                   required
                 />
               </div>
@@ -261,83 +259,27 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                 />
                 <Label htmlFor="customizedProduct">Customized Product</Label>
               </div>
-              {productType === 'Normal' && (
-                <div>
-                  {products.map((product, index) => (
-                    <div key={index} className="flex space-x-3 mb-2">
-                      <Select
-                        className="flex-1"
-                        value={product.product}
-                        onChange={(e) => handleProductChange(index, 'product', e.target.value)}
-                        required
-                      >
-                        <option value="">Select product</option>
-                        {productLoad.map(prod => (
-                          <option key={prod.ProductID} value={prod.ProductID}>
-                            {prod.ProductName}
-                          </option>
-                        ))}
-                      </Select>
-                      <TextInput
-                        className="flex-1"
-                        type="number"
-                        min="1"
-                        value={product.quantity}
-                        onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
-                        placeholder="Quantity"
-                        required
-                      />
-                      <Button onClick={() => removeProduct(index)} color="failure">
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button onClick={addProduct}>Add Product</Button>
-                </div>
-              )}
-              {productType === 'Customized' && (
-                <div>
-                  <h3 className="text-lg font-semibold">Raw Materials</h3>
-                  {rawMaterials.map((rm, index) => (
-                    <div key={index} className="flex space-x-3 mb-2">
-                      <Select
-                        className="flex-1"
-                        value={rm.material}
-                        onChange={(e) => handleRawMaterialChange(index, 'material', e.target.value)}
-                        required
-                      >
-                        <option value="">Select raw material</option>
-                        {rawMaterialLoad.map(material => (
-                          <option key={material.RawMaterialID} value={material.RawMaterialID}>
-                            {material.RawMaterial}
-                          </option>
-                        ))}
-                      </Select>
-                      <TextInput
-                        className="flex-1"
-                        type="number"
-                        min="1"
-                        value={rm.quantity}
-                        onChange={(e) => handleRawMaterialChange(index, 'quantity', e.target.value)}
-                        placeholder="Quantity"
-                        required
-                      />
-                      <Button onClick={() => removeRawMaterial(index)} color="failure">
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button onClick={addRawMaterial}>Add Raw Material</Button>
-                  <div className="mt-4">
-                    <Label htmlFor="image" value="Upload Image" className="mb-2 block" />
-                    <TextInput
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
-                  </div>
-                </div>
+              {productType === 'Normal' ? (
+                <AddNormalJobDetails
+                  products={products}
+                  setProducts={setProducts}
+                  productLoad={productLoad}
+                  handleProductChange={handleProductChange}
+                  addProduct={addProduct}
+                  removeProduct={removeProduct}
+                />
+              ) : (
+                <AddCustomizedJobDetails
+                  rawMaterials={rawMaterials}
+                  setRawMaterials={setRawMaterials}
+                  rawMaterialLoad={rawMaterialLoad}
+                  rawMaterialBatches={rawMaterialBatches}
+                  setRawMaterialBatches={setRawMaterialBatches}
+                  handleRawMaterialChange={handleRawMaterialChange}
+                  addRawMaterial={addRawMaterial}
+                  removeRawMaterial={removeRawMaterial}
+                  handleImageChange={(e) => setImage(e.target.files[0])}
+                />
               )}
             </div>
           </Tabs.Tab>

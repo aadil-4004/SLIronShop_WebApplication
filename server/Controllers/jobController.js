@@ -36,9 +36,20 @@ router.get('/', (req, res) => {
 
 // Add a new job
 router.post('/', upload.single('image'), (req, res) => {
-  const { dueDate, status, customerID, note, employeeName } = req.body;
-  const products = req.body.products ? JSON.parse(req.body.products) : [];
-  const rawMaterials = req.body.rawMaterials ? JSON.parse(req.body.rawMaterials) : [];
+  console.log('Request Body:', req.body); // Log the request body
+
+  const { dueDate, status, customerID, note, employeeName } = req.body; // Change customerName to customerID
+  let products = [];
+  let rawMaterials = [];
+
+  try {
+    products = req.body.products ? JSON.parse(req.body.products) : [];
+    rawMaterials = req.body.rawMaterials ? JSON.parse(req.body.rawMaterials) : [];
+  } catch (error) {
+    console.error('Error parsing products or raw materials:', error);
+    return res.status(400).json({ error: 'Invalid JSON format for products or raw materials' });
+  }
+
   const imagePath = req.file ? req.file.path : null;
 
   connection.beginTransaction((transactionError) => {
@@ -47,7 +58,7 @@ router.post('/', upload.single('image'), (req, res) => {
       return res.status(500).json({ error: 'Error starting transaction', details: transactionError });
     }
 
-    const jobQuery = 'INSERT INTO jobs (CreatedDate, DueDate, Status, CustomerID, Note, EmployeeName) VALUES (NOW(), ?, ?, ?, ?, ?)';
+    const jobQuery = 'INSERT INTO jobs (DueDate, Status, CustomerID, Note, EmployeeName) VALUES (?, ?, ?, ?, ?)';
     connection.query(jobQuery, [dueDate, status, customerID, note, employeeName], (jobError, jobResults) => {
       if (jobError) {
         return connection.rollback(() => {
@@ -193,6 +204,26 @@ router.get('/:jobId/productbatchusage', (req, res) => {
     if (error) {
       console.error('Error fetching product batch usage:', error);
       return res.status(500).json({ error: 'Error fetching product batch usage' });
+    }
+
+    res.json(results);
+  });
+});
+
+// Fetch batches for a specific raw material
+router.get('/rawmaterial/:rawMaterialId/batches', (req, res) => {
+  const rawMaterialId = req.params.rawMaterialId;
+
+  const batchQuery = `
+    SELECT BatchID, RawMaterialID, Quantity, UnitPrice, DateReceived 
+    FROM batchrawmaterial 
+    WHERE RawMaterialID = ?
+  `;
+
+  connection.query(batchQuery, [rawMaterialId], (error, results) => {
+    if (error) {
+      console.error('Error fetching batches:', error);
+      return res.status(500).json({ error: 'Error fetching batches' });
     }
 
     res.json(results);
