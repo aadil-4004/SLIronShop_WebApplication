@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Tabs, Label, Radio, Button, Select, TextInput } from 'flowbite-react';
+import { Radio, Tabs, Label, Select, TextInput, Button } from 'flowbite-react';
 import AddNormalJobDetails from '../jobmodal/addnormaljobmodal';
-import AddCustomizedJobDetails from '../jobmodal/addcustomizedjobmodal.';
+import AddCustomizedJobDetails from './addcustomizedjobmodal';
 import axios from 'axios';
 
 const customStyles = {
@@ -35,7 +35,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [products, setProducts] = useState([{ product: '', quantity: '', rawMaterials: [] }]);
   const [productLoad, setProductLoad] = useState([]);
   const [productType, setProductType] = useState('Normal');
-  const [rawMaterials, setRawMaterials] = useState([]);
+  const [rawMaterials, setRawMaterials] = useState([{ material: '', quantity: '' }]);
   const [rawMaterialLoad, setRawMaterialLoad] = useState([]);
   const [rawMaterialBatches, setRawMaterialBatches] = useState({});
   const [customers, setCustomers] = useState([]);
@@ -76,14 +76,14 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       Object.entries(formData).forEach(([key, value]) => {
         jobData.append(key, value);
       });
-  
+
       if (productType === 'Normal') {
         jobData.append('products', JSON.stringify(products));
       } else if (productType === 'Customized') {
         jobData.append('rawMaterials', JSON.stringify(rawMaterials));
         jobData.append('image', image);
       }
-  
+
       await axios.post('http://localhost:3001/api/jobs', jobData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -96,7 +96,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       console.error('Error adding job:', error);
     }
   };
-  
+
   const handleProductChange = async (index, field, value) => {
     const updatedProducts = products.map((product, i) => {
       if (i === index) {
@@ -172,7 +172,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           <Tabs.Tab title="Job Details">
             <div className="space-y-3 mt-3">
               <div>
-              <Label htmlFor="customerID" value="Customer Name" className="mb-2 block" />
+                <Label htmlFor="customerID" value="Customer Name" className="mb-2 block" />
                 <Select
                   id="customerID"
                   name="customerID"
