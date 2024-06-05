@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Button, Label, Select, TextInput, Tabs, Radio } from 'flowbite-react';
+import { Button, Label, Select, TextInput, Radio, Tabs } from 'flowbite-react';
 import axios from 'axios';
 
 const customStyles = {
@@ -23,8 +23,6 @@ const customStyles = {
 
 const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [formData, setFormData] = useState({
-    jobID: '',
-    createdDate: '',
     dueDate: '',
     status: '',
     customerName: '',
@@ -32,16 +30,17 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
     assignedEmployee: '',
   });
 
-  const [products, setProducts] = useState([{ product: '', quantity: '' }]);
+  const [products, setProducts] = useState([{ product: '', quantity: '', rawMaterials: [] }]);
   const [productLoad, setProductLoad] = useState([]);
   const [productType, setProductType] = useState('Normal');
-  const [rawMaterials, setRawMaterials] = useState([{ material: '', quantity: '' }]);
   const [rawMaterialLoad, setRawMaterialLoad] = useState([]);
+  const [rawMaterials, setRawMaterials] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [image, setImage] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-      axios.get('http://localhost:3001/api/products')
+      axios.get('http://localhost:3001/api/product')
         .then(response => {
           setProductLoad(response.data);
         })
@@ -56,6 +55,14 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
         .catch(error => {
           console.error('Error fetching raw materials:', error);
         });
+
+      axios.get('http://localhost:3001/api/customers')
+        .then(response => {
+          setCustomers(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching customers:', error);
+        });
     }
   }, [isOpen]);
 
@@ -67,7 +74,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
     });
   };
 
-  const handleProductChange = (index, field, value) => {
+  const handleProductChange = async (index, field, value) => {
     const updatedProducts = products.map((product, i) => {
       if (i === index) {
         return { ...product, [field]: value };
@@ -75,6 +82,22 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       return product;
     });
     setProducts(updatedProducts);
+
+    if (field === 'product') {
+      try {
+        const response = await axios.get(`http://localhost:3001/api/product/${value}/rawmaterials`);
+        const rawMaterials = response.data;
+        const updatedProductsWithRawMaterials = updatedProducts.map((product, i) => {
+          if (i === index) {
+            return { ...product, rawMaterials };
+          }
+          return product;
+        });
+        setProducts(updatedProductsWithRawMaterials);
+      } catch (error) {
+        console.error('Error fetching raw materials data:', error);
+      }
+    }
   };
 
   const handleRawMaterialChange = (index, field, value) => {
@@ -88,7 +111,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   };
 
   const addProduct = () => {
-    setProducts([...products, { product: '', quantity: '' }]);
+    setProducts([...products, { product: '', quantity: '', rawMaterials: [] }]);
   };
 
   const removeProduct = (index) => {
@@ -151,26 +174,21 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           <Tabs.Tab title="Job Details">
             <div className="space-y-3 mt-3">
               <div>
-                <Label htmlFor="jobID" value="Job ID" className="mb-2 block" />
-                <TextInput
-                  id="jobID"
-                  name="jobID"
-                  value={formData.jobID || ''}
-                  onChange={handleChange}
-                  placeholder="Enter job ID"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="createdDate" value="Created Date" className="mb-2 block" />
-                <TextInput
-                  id="createdDate"
-                  name="createdDate"
-                  type="date"
-                  value={formData.createdDate || ''}
+                <Label htmlFor="customerName" value="Customer Name" className="mb-2 block" />
+                <Select
+                  id="customerName"
+                  name="customerName"
+                  value={formData.customerName}
                   onChange={handleChange}
                   required
-                />
+                >
+                  <option value="">Select customer</option>
+                  {customers.map(customer => (
+                    <option key={customer.CustomerID} value={customer.CustomerID}>
+                      {customer.CustomerName}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <Label htmlFor="dueDate" value="Due Date" className="mb-2 block" />
@@ -178,7 +196,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   id="dueDate"
                   name="dueDate"
                   type="date"
-                  value={formData.dueDate || ''}
+                  value={formData.dueDate}
                   onChange={handleChange}
                   required
                 />
@@ -188,7 +206,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                 <Select
                   id="status"
                   name="status"
-                  value={formData.status || ''}
+                  value={formData.status}
                   onChange={handleChange}
                   required
                 >
@@ -196,28 +214,28 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   <option value="Pending">Pending</option>
                   <option value="In Progress">In Progress</option>
                   <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
                 </Select>
-              </div>
-              <div>
-                <Label htmlFor="customerName" value="Customer Name" className="mb-2 block" />
-                <TextInput
-                  id="customerName"
-                  name="customerName"
-                  value={formData.customerName || ''}
-                  onChange={handleChange}
-                  placeholder="Enter customer name"
-                  required
-                />
               </div>
               <div>
                 <Label htmlFor="note" value="Note" className="mb-2 block" />
                 <TextInput
                   id="note"
                   name="note"
-                  value={formData.note || ''}
+                  type="text"
+                  placeholder='Enter Special Notes about the Job'
+                  value={formData.note}
                   onChange={handleChange}
-                  placeholder="Enter note"
+                />
+              </div>
+              <div>
+                <Label htmlFor="assignedEmployee" value="Assigned Employee" className="mb-2 block" />
+                <TextInput
+                  id="assignedEmployee"
+                  name="assignedEmployee"
+                  type="text"
+                  placeholder='Employee Name'
+                  value={formData.assignedEmployee}
+                  onChange={handleChange}
                   required
                 />
               </div>
@@ -225,31 +243,26 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           </Tabs.Tab>
           <Tabs.Tab title="Product Details">
             <div className="space-y-3 mt-3">
-              <div className="flex space-x-4 mb-4">
-                <Label className="flex items-center">
-                  <Radio
-                    type="radio"
-                    name="productType"
-                    value="Normal"
-                    checked={productType === 'Normal'}
-                    onChange={() => setProductType('Normal')}
-                  />
-                  <span className="ml-2">Normal</span>
-                </Label>
-                <Label className="flex items-center">
-                  <Radio
-                    type="radio"
-                    name="productType"
-                    value="Customized"
-                    checked={productType === 'Customized'}
-                    onChange={() => setProductType('Customized')}
-                  />
-                  <span className="ml-2">Customized</span>
-                </Label>
+              <div className="flex space-x-3 mb-3">
+                <Radio
+                  id="normalProduct"
+                  name="productType"
+                  value="Normal"
+                  checked={productType === 'Normal'}
+                  onChange={() => setProductType('Normal')}
+                />
+                <Label htmlFor="normalProduct">Normal Product</Label>
+                <Radio
+                  id="customizedProduct"
+                  name="productType"
+                  value="Customized"
+                  checked={productType === 'Customized'}
+                  onChange={() => setProductType('Customized')}
+                />
+                <Label htmlFor="customizedProduct">Customized Product</Label>
               </div>
               {productType === 'Normal' && (
                 <div>
-                  <h3 className="text-lg font-semibold">Products</h3>
                   {products.map((product, index) => (
                     <div key={index} className="flex space-x-3 mb-2">
                       <Select
@@ -259,49 +272,41 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                         required
                       >
                         <option value="">Select product</option>
-                        {productLoad.map(product => (
-                          <option key={product.ProductID} value={product.ProductID}>
-                            {product.ProductName}
+                        {productLoad.map(prod => (
+                          <option key={prod.ProductID} value={prod.ProductID}>
+                            {prod.ProductName}
                           </option>
                         ))}
                       </Select>
                       <TextInput
-                        className="w-20"
+                        className="flex-1"
                         type="number"
-                        min="0"
-                        placeholder="Qty"
+                        min="1"
                         value={product.quantity}
                         onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                        placeholder="Quantity"
                         required
                       />
-                      <Button
-                        type="button"
-                        className="bg-red-500 hover:bg-red-700 w-20"
-                        onClick={() => removeProduct(index)}
-                      >
+                      <Button onClick={() => removeProduct(index)} color="failure">
                         Remove
                       </Button>
                     </div>
                   ))}
-                  <Button type="button" className="bg-green-500 hover:bg-green-700" onClick={addProduct}>
-                    Add Another Product
-                  </Button>
+                  <Button onClick={addProduct}>Add Product</Button>
                 </div>
               )}
               {productType === 'Customized' && (
                 <div>
-                  <Label htmlFor="imageUpload" value="Upload an Image" className="mb-2 block" />
-                  <input type="file" accept="image/*" onChange={handleImageChange} required />
-                  <h3 className="text-lg font-semibold mt-4">Raw Materials</h3>
-                  {rawMaterials.map((rawMaterial, index) => (
+                  <h3 className="text-lg font-semibold">Raw Materials</h3>
+                  {rawMaterials.map((rm, index) => (
                     <div key={index} className="flex space-x-3 mb-2">
                       <Select
                         className="flex-1"
-                        value={rawMaterial.material}
+                        value={rm.material}
                         onChange={(e) => handleRawMaterialChange(index, 'material', e.target.value)}
                         required
                       >
-                        <option value="">Select material</option>
+                        <option value="">Select raw material</option>
                         {rawMaterialLoad.map(material => (
                           <option key={material.RawMaterialID} value={material.RawMaterialID}>
                             {material.RawMaterial}
@@ -309,49 +314,37 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                         ))}
                       </Select>
                       <TextInput
-                        className="w-20"
+                        className="flex-1"
                         type="number"
-                        min="0"
-                        placeholder="Qty"
-                        value={rawMaterial.quantity}
+                        min="1"
+                        value={rm.quantity}
                         onChange={(e) => handleRawMaterialChange(index, 'quantity', e.target.value)}
+                        placeholder="Quantity"
                         required
                       />
-                      <Button
-                        type="button"
-                        className="bg-red-500 hover:bg-red-700 w-20"
-                        onClick={() => removeRawMaterial(index)}
-                      >
+                      <Button onClick={() => removeRawMaterial(index)} color="failure">
                         Remove
                       </Button>
                     </div>
                   ))}
-                  <Button type="button" className="bg-green-500 hover:bg-green-700" onClick={addRawMaterial}>
-                    Add Another Material
-                  </Button>
+                  <Button onClick={addRawMaterial}>Add Raw Material</Button>
+                  <div className="mt-4">
+                    <Label htmlFor="image" value="Upload Image" className="mb-2 block" />
+                    <TextInput
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                  </div>
                 </div>
               )}
             </div>
           </Tabs.Tab>
-          <Tabs.Tab title="Office Details">
-            <div className="space-y-3 mt-3">
-              <div>
-                <Label htmlFor="assignedEmployee" value="Assigned Employee" className="mb-2 block" />
-                <TextInput
-                  id="assignedEmployee"
-                  name="assignedEmployee"
-                  value={formData.assignedEmployee || ''}
-                  onChange={handleChange}
-                  placeholder="Enter employee name"
-                  required
-                />
-              </div>
-              {/* Add more fields as required */}
-            </div>
-          </Tabs.Tab>
         </Tabs>
-        <div className="w-full mt-5">
-          <Button type="submit">Add Job</Button>
+        <div className="flex justify-end mt-4">
+          <Button onClick={closeModal} color="warning" className="mr-2">Cancel</Button>
+          <Button type="submit" color="success">Add Job</Button>
         </div>
       </form>
     </Modal>

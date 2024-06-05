@@ -8,6 +8,7 @@ const rawmaterialController = require('../Controllers/rawmaterialController');
 const supplierController = require('../Controllers/supplierController');
 const batchRawMaterialController = require('../Controllers/batchRawMaterialController');
 const catalogueController = require('../Controllers/catalogueController');
+const jobController = require('../Controllers/jobController');
 
 const cors = require('cors');
 
@@ -30,6 +31,7 @@ app.use('/api/rawmaterial', rawmaterialController);
 app.use('/api/', supplierController);
 app.use('/api/batchrawmaterial', batchRawMaterialController)
 app.use('/api/catalogue', catalogueController);  // Updated path
+app.use('/api/jobs', jobController);  // Updated path
 
 app.use('/uploads', express.static('uploads'));
 
