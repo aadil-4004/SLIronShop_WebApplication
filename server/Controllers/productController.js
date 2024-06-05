@@ -24,7 +24,6 @@ router.get('/', (req, res) => {
       console.error('Error retrieving products:', error);
       res.status(500).json({ error: 'Error retrieving products' });
     } else {
-        
       res.json(results);
     }
   });

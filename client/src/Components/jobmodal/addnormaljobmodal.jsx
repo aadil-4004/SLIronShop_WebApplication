@@ -1,53 +1,60 @@
 import React from 'react';
-import { Button, Label, Select, TextInput } from 'flowbite-react';
+import { Label, Select, TextInput, Button } from 'flowbite-react';
 
-const AddNormalJobDetails = ({ products, setProducts, productLoad, handleProductChange, addProduct, removeProduct }) => {
+const AddNormalJobDetails = ({ products, setProducts, productLoad, handleProductChange, addProduct, removeProduct, rawMaterialBatches }) => {
   return (
-    <div className="space-y-3 mt-3">
+    <div>
       {products.map((product, index) => (
-        <div key={index} className="flex flex-col space-y-3 mb-2">
-          <div className="flex space-x-3">
+        <div key={index} className="mb-4 p-3 border rounded">
+          <div className="flex space-x-3 mb-2">
+            <Label htmlFor={`product-${index}`} value="Product" className="w-1/5" />
             <Select
-              className="flex-1"
+              id={`product-${index}`}
               value={product.product}
               onChange={(e) => handleProductChange(index, 'product', e.target.value)}
               required
             >
               <option value="">Select product</option>
-              {productLoad.map(prod => (
-                <option key={prod.ProductID} value={prod.ProductID}>
-                  {prod.ProductName}
-                </option>
+              {productLoad.map(p => (
+                <option key={p.ProductID} value={p.ProductID}>{p.ProductName}</option>
               ))}
             </Select>
+            <Label htmlFor={`quantity-${index}`} value="Quantity" className="w-1/5" />
             <TextInput
-              className="flex-1"
+              className="w-1/5"
+              id={`quantity-${index}`}
               type="number"
               min="1"
               value={product.quantity}
               onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
-              placeholder="Quantity"
               required
             />
-            <Button onClick={() => removeProduct(index)} color="failure">
-              Remove
-            </Button>
+            <Button type="button" color="red" onClick={() => removeProduct(index)}>Remove</Button>
           </div>
-          {product.rawMaterials.length > 0 && (
-            <div className="ml-6 mb-2">
-              <h4 className="text-md font-semibold">Raw Materials</h4>
-              <ul>
-                {product.rawMaterials.map((rm) => (
-                  <li key={rm.RawMaterialID}>
-                    {rm.materialName}: {rm.quantity}
-                  </li>
+
+          <h4 className="text-lg font-semibold">Raw Materials</h4>
+          {product.rawMaterials.map((rawMaterial, rmIndex) => (
+            <div key={rmIndex} className="mb-2 p-2 border rounded">
+              <Label value={`Material: ${rawMaterial.materialName}`} className="block mb-1" />
+              <Label value={`Quantity: ${rawMaterial.quantity}`} className="block mb-1" />
+              <Label value="Batches" className="block mb-1" />
+              <Select
+                value={rawMaterial.batch}
+                onChange={(e) => handleProductChange(index, `rawMaterials[${rmIndex}].batch`, e.target.value)}
+                required
+              >
+                <option value="">Select batch</option>
+                {(rawMaterialBatches[rawMaterial.material] || []).map(batch => (
+                  <option key={batch.BatchID} value={batch.BatchID}>
+                    {`Batch ${batch.BatchID} - Qty: ${batch.Quantity}, Price: ${batch.UnitPrice} `}
+                  </option>
                 ))}
-              </ul>
+              </Select>
             </div>
-          )}
+          ))}
         </div>
       ))}
-      <Button onClick={addProduct}>Add Product</Button>
+      <Button type="button" onClick={addProduct}>Add Another Product</Button>
     </div>
   );
 };

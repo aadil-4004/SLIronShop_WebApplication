@@ -38,7 +38,7 @@ router.get('/', (req, res) => {
 router.post('/', upload.single('image'), (req, res) => {
   console.log('Request Body:', req.body); // Log the request body
 
-  const { dueDate, status, customerID, note, assignedEmployee } = req.body; // Ensure EmployeeName is passed correctly
+  const { dueDate, status, customerID, note, assignedEmployee, customProductName } = req.body; // Ensure EmployeeName is passed correctly
   let products = [];
   let rawMaterials = [];
 
@@ -102,10 +102,10 @@ router.post('/', upload.single('image'), (req, res) => {
             });
           });
       } else if (rawMaterials.length > 0) {
-        const rawMaterialQueries = rawMaterials.map(({ material, quantity, productName }) => {
+        const rawMaterialQueries = rawMaterials.map(({ material, quantity }) => {
           return new Promise((resolve, reject) => {
-            const rawMaterialQuery = 'INSERT INTO CustomJob (JobID, RawMaterialID, Quantity, ProductName, ImagePath) VALUES (?, ?, ?, ?, ?)';
-            connection.query(rawMaterialQuery, [jobID, material, quantity, productName, imagePath], (rawMaterialError) => {
+            const rawMaterialQuery = 'INSERT INTO CustomJob (JobID, RawMaterialID, Quantity, CustomProductName, ImagePath) VALUES (?, ?, ?, ?, ?)';
+            connection.query(rawMaterialQuery, [jobID, material, quantity, customProductName, imagePath], (rawMaterialError) => {
               if (rawMaterialError) {
                 return reject(rawMaterialError);
               }
@@ -173,7 +173,7 @@ router.get('/:jobId/rawmaterials', (req, res) => {
   const jobId = req.params.jobId;
 
   const rawMaterialsQuery = `
-    SELECT cj.CustomJobID, cj.RawMaterialID, rm.RawMaterial, cj.Quantity, cj.ProductName, cj.ImagePath
+    SELECT cj.CustomJobID, cj.RawMaterialID, rm.RawMaterial, cj.Quantity, cj.CustomProductName, cj.ImagePath
     FROM CustomJob cj
     JOIN rawmaterial rm ON cj.RawMaterialID = rm.RawMaterialID
     WHERE cj.JobID = ?

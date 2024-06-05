@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { Radio, Tabs, Label, Select, TextInput, Button } from 'flowbite-react';
 import AddNormalJobDetails from '../jobmodal/addnormaljobmodal';
-import AddCustomizedJobDetails from './addcustomizedjobmodal';
+import AddCustomizedJobDetails from '../jobmodal/addcustomizedjobmodal';
 import axios from 'axios';
 
 const customStyles = {
@@ -14,7 +14,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90%',
-    width: '450px',
+    width: '550px',
     maxHeight: '80%',
     overflowY: 'auto',
   },
@@ -35,11 +35,12 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [products, setProducts] = useState([{ product: '', quantity: '', rawMaterials: [] }]);
   const [productLoad, setProductLoad] = useState([]);
   const [productType, setProductType] = useState('Normal');
-  const [rawMaterials, setRawMaterials] = useState([{ material: '', quantity: '' }]);
+  const [rawMaterials, setRawMaterials] = useState([]);
   const [rawMaterialLoad, setRawMaterialLoad] = useState([]);
   const [rawMaterialBatches, setRawMaterialBatches] = useState({});
   const [customers, setCustomers] = useState([]);
   const [image, setImage] = useState(null);
+  const [customProductName, setCustomProductName] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -82,6 +83,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       } else if (productType === 'Customized') {
         jobData.append('rawMaterials', JSON.stringify(rawMaterials));
         jobData.append('image', image);
+        jobData.append('customProductName', customProductName);
       }
 
       await axios.post('http://localhost:3001/api/jobs', jobData, {
@@ -117,8 +119,20 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           return product;
         });
         setProducts(updatedProductsWithRawMaterials);
+
+        // Fetch batches for each raw material
+        const batchesPromises = rawMaterials.map((rm) => axios.get(`http://localhost:3001/api/rawmaterial/${rm.material}/batches`));
+        const batchesResponses = await Promise.all(batchesPromises);
+        const batchesData = batchesResponses.reduce((acc, response, idx) => {
+          acc[rawMaterials[idx].material] = response.data;
+          return acc;
+        }, {});
+        setRawMaterialBatches((prevBatches) => ({
+          ...prevBatches,
+          ...batchesData,
+        }));
       } catch (error) {
-        console.error('Error fetching raw materials data:', error);
+        console.error('Error fetching raw materials or batches:', error);
       }
     }
   };
@@ -267,6 +281,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   handleProductChange={handleProductChange}
                   addProduct={addProduct}
                   removeProduct={removeProduct}
+                  rawMaterialBatches={rawMaterialBatches}
                 />
               ) : (
                 <AddCustomizedJobDetails
@@ -279,6 +294,8 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                   addRawMaterial={addRawMaterial}
                   removeRawMaterial={removeRawMaterial}
                   handleImageChange={(e) => setImage(e.target.files[0])}
+                  customProductName={customProductName}
+                  setCustomProductName={setCustomProductName}
                 />
               )}
             </div>

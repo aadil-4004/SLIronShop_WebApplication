@@ -1,92 +1,81 @@
 import React from 'react';
 import { Label, Select, TextInput, Button } from 'flowbite-react';
 
-const AddCustomizedJobDetails = ({
-  rawMaterials,
-  setRawMaterials,
-  rawMaterialLoad,
-  rawMaterialBatches,
-  setRawMaterialBatches,
-  handleRawMaterialChange,
-  addRawMaterial,
-  removeRawMaterial,
-  handleImageChange,
+const AddCustomizedJobDetails = ({ 
+  rawMaterials, 
+  setRawMaterials, 
+  rawMaterialLoad, 
+  rawMaterialBatches, 
+  handleRawMaterialChange, 
+  addRawMaterial, 
+  removeRawMaterial, 
+  handleImageChange, 
+  customProductName, 
+  setCustomProductName 
 }) => {
-  const handleRawMaterialBatchChange = async (index, rawMaterialID) => {
-    const response = await fetch(`http://localhost:3001/api/rawmaterial/${rawMaterialID}/batches`);
-    const data = await response.json();
-    const updatedBatches = { ...rawMaterialBatches, [rawMaterialID]: data };
-    setRawMaterialBatches(updatedBatches);
-  };
-
   return (
-    <div className="space-y-3">
-      <div>
-        <Label htmlFor="productName" value="Product Name" className="mb-2 block" />
-        <TextInput
-          id="productName"
-          name="productName"
-          type="text"
-          placeholder='Enter Customized Product Name'
-          onChange={(e) => setRawMaterials((prev) => {
-            const newMaterials = [...prev];
-            newMaterials.productName = e.target.value;
-            return newMaterials;
-          })}
-          required
-        />
+    <div>
+      <div className="space-y-3">
+        <div>
+          <Label htmlFor="customProductName" value="Custom Product Name" className="mb-2 block" />
+          <TextInput
+            id="customProductName"
+            name="customProductName"
+            placeholder="Enter custom product name"
+            value={customProductName}
+            onChange={(e) => setCustomProductName(e.target.value)}
+            required
+          />
+        </div>
       </div>
-      <div>
-        <Label htmlFor="image" value="Upload Image" className="mb-2 block" />
-        <TextInput
-          id="image"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-        />
-      </div>
-      {Array.isArray(rawMaterials) && rawMaterials.map((rm, index) => (
-        <div key={index} className="flex space-x-3 mb-2">
+      {rawMaterials.map((rawMaterial, index) => (
+        <div key={index} className="mb-4 p-3 border rounded">
+          <div className="flex space-x-3 mb-2">
+            <Label htmlFor={`rawMaterial-${index}`} value="Raw Material" className="w-1/5" />
+            <Select
+              id={`rawMaterial-${index}`}
+              value={rawMaterial.material}
+              onChange={(e) => handleRawMaterialChange(index, 'material', e.target.value)}
+              required
+            >
+              <option value="">Select raw material</option>
+              {rawMaterialLoad.map(rm => (
+                <option key={rm.RawMaterialID} value={rm.RawMaterialID}>{rm.RawMaterial}</option>
+              ))}
+            </Select>
+            <Label htmlFor={`quantity-${index}`} value="Quantity" className="w-1/5" />
+            <TextInput
+              className="w-1/5"
+              id={`quantity-${index}`}
+              type="number"
+              min="1"
+              value={rawMaterial.quantity}
+              onChange={(e) => handleRawMaterialChange(index, 'quantity', e.target.value)}
+              required
+            />
+            <Button type="button" color="red" onClick={() => removeRawMaterial(index)}>Remove</Button>
+          </div>
+
+          <Label value="Batches" className="block mb-1" />
           <Select
-            className="flex-1"
-            value={rm.material}
-            onChange={(e) => {
-              handleRawMaterialChange(index, 'material', e.target.value);
-              handleRawMaterialBatchChange(index, e.target.value);
-            }}
+            value={rawMaterial.batch}
+            onChange={(e) => handleRawMaterialChange(index, 'batch', e.target.value)}
             required
           >
-            <option value="">Select raw material</option>
-            {rawMaterialLoad.map(material => (
-              <option key={material.RawMaterialID} value={material.RawMaterialID}>
-                {material.RawMaterial}
+            <option value="">Select batch</option>
+            {(rawMaterialBatches[rawMaterial.material] || []).map(batch => (
+              <option key={batch.BatchID} value={batch.BatchID}>
+                {`Batch ${batch.BatchID} - Qty: ${batch.Quantity}, Price: ${batch.UnitPrice} `}
               </option>
             ))}
           </Select>
-          <TextInput
-            className="flex-1"
-            type="number"
-            min="1"
-            value={rm.quantity}
-            onChange={(e) => handleRawMaterialChange(index, 'quantity', e.target.value)}
-            placeholder="Quantity"
-            required
-          />
-          <Button onClick={() => removeRawMaterial(index)} color="failure">
-            Remove
-          </Button>
-          {rawMaterialBatches[rm.material] && (
-            <Select className="flex-1" required>
-              {rawMaterialBatches[rm.material].map(batch => (
-                <option key={batch.BatchID} value={batch.BatchID}>
-                  {batch.Quantity} units @ {batch.UnitPrice} each
-                </option>
-              ))}
-            </Select>
-          )}
         </div>
       ))}
-      <Button onClick={addRawMaterial}>Add Raw Material</Button>
+      <div className="mb-4">
+        <Label htmlFor="productImage" value="Upload Custom Product Image" className="mb-2 block" />
+        <input type="file" id="productImage" accept="image/*" onChange={handleImageChange} />
+      </div>
+      <Button type="button" onClick={addRawMaterial}>Add Another Raw Material</Button>
     </div>
   );
 };
