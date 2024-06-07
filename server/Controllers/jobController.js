@@ -34,6 +34,22 @@ router.get('/', (req, res) => {
   });
 });
 
+// Update job status
+router.put('/:jobId/status', (req, res) => {
+  const { jobId } = req.params;
+  const { status } = req.body;
+
+  const query = 'UPDATE jobs SET Status = ? WHERE JobID = ?';
+  connection.query(query, [status, jobId], (error, results) => {
+    if (error) {
+      console.error('Error updating job status:', error);
+      res.status(500).json({ error: 'Error updating job status' });
+    } else {
+      res.status(200).json({ message: 'Job status updated successfully' });
+    }
+  });
+});
+
 // Add a new job
 router.post('/', upload.single('image'), (req, res) => {
   console.log('Request Body:', req.body); // Log the request body
@@ -80,48 +96,13 @@ router.post('/', upload.single('image'), (req, res) => {
               }
 
               // Process raw materials for the product
-              const rawMaterialQueries = rawMaterials.map(({ material, batch, quantity: rmQuantity }) => {
+              const rawMaterialQueries = rawMaterials.map(({ material, quantity: rmQuantity }) => {
                 return new Promise((resolveRM, rejectRM) => {
-                  const checkQuery = 'SELECT * FROM ProductBatchUsage WHERE JobID = ? AND ProductID = ? AND RawMaterialID = ? AND BatchID = ?';
-                  connection.query(checkQuery, [jobID, product, material, batch], (checkError, checkResults) => {
-                    if (checkError) {
-                      return rejectRM(checkError);
+                  allocateBatch(jobID, product, material, rmQuantity * quantity, (allocationError) => {
+                    if (allocationError) {
+                      return rejectRM(allocationError);
                     }
-
-                    if (checkResults.length > 0) {
-                      // If the entry exists, update the quantity
-                      const existingEntry = checkResults[0];
-                      const updateQuery = 'UPDATE ProductBatchUsage SET Quantity = Quantity + ? WHERE UsageID = ?';
-                      connection.query(updateQuery, [rmQuantity * quantity, existingEntry.UsageID], (updateError) => {
-                        if (updateError) {
-                          return rejectRM(updateError);
-                        }
-
-                        const batchQuery = 'UPDATE batchrawmaterial SET Quantity = Quantity - ? WHERE BatchID = ? AND RawMaterialID = ?';
-                        connection.query(batchQuery, [rmQuantity * quantity, batch, material], (batchError) => {
-                          if (batchError) {
-                            return rejectRM(batchError);
-                          }
-                          resolveRM();
-                        });
-                      });
-                    } else {
-                      // If the entry does not exist, insert a new one
-                      const usageQuery = 'INSERT INTO ProductBatchUsage (JobID, ProductID, RawMaterialID, BatchID, Quantity) VALUES (?, ?, ?, ?, ?)';
-                      connection.query(usageQuery, [jobID, product, material, batch, rmQuantity * quantity], (usageError) => {
-                        if (usageError) {
-                          return rejectRM(usageError);
-                        }
-
-                        const batchQuery = 'UPDATE batchrawmaterial SET Quantity = Quantity - ? WHERE BatchID = ? AND RawMaterialID = ?';
-                        connection.query(batchQuery, [rmQuantity * quantity, batch, material], (batchError) => {
-                          if (batchError) {
-                            return rejectRM(batchError);
-                          }
-                          resolveRM();
-                        });
-                      });
-                    }
+                    resolveRM();
                   });
                 });
               });
@@ -152,7 +133,7 @@ router.post('/', upload.single('image'), (req, res) => {
             });
           });
       } else if (rawMaterials.length > 0) {
-        const rawMaterialQueries = rawMaterials.map(({ material, quantity, batch }) => {
+        const rawMaterialQueries = rawMaterials.map(({ material, quantity }) => {
           return new Promise((resolve, reject) => {
             const rawMaterialQuery = 'INSERT INTO CustomJob (JobID, RawMaterialID, Quantity, CustomProductName, ImagePath) VALUES (?, ?, ?, ?, ?)';
             connection.query(rawMaterialQuery, [jobID, material, quantity, customProductName, imagePath], (rawMaterialError) => {
@@ -160,21 +141,11 @@ router.post('/', upload.single('image'), (req, res) => {
                 return reject(rawMaterialError);
               }
 
-              // Insert into ProductBatchUsage table
-              const usageQuery = 'INSERT INTO ProductBatchUsage (JobID, ProductID, RawMaterialID, BatchID, Quantity) VALUES (?, ?, ?, ?, ?)';
-              connection.query(usageQuery, [jobID, null, material, batch, quantity], (usageError) => {
-                if (usageError) {
-                  return reject(usageError);
+              allocateBatch(jobID, null, material, quantity, (allocationError) => {
+                if (allocationError) {
+                  return reject(allocationError);
                 }
-
-                // Deduct quantity from the batch
-                const batchQuery = 'UPDATE batchrawmaterial SET Quantity = Quantity - ? WHERE BatchID = ? AND RawMaterialID = ?';
-                connection.query(batchQuery, [quantity, batch, material], (batchError) => {
-                  if (batchError) {
-                    return reject(batchError);
-                  }
-                  resolve();
-                });
+                resolve();
               });
             });
           });
@@ -212,6 +183,58 @@ router.post('/', upload.single('image'), (req, res) => {
     });
   });
 });
+
+// Function to allocate batches
+const allocateBatch = (jobID, productID, rawMaterialID, requiredQuantity, callback) => {
+  const query = `SELECT BatchID, Quantity 
+                 FROM BatchRawMaterial 
+                 WHERE RawMaterialID = ? AND Quantity > 0 
+                 ORDER BY DateReceived`;
+
+  connection.query(query, [rawMaterialID], (error, batches) => {
+    if (error) {
+      return callback(error);
+    }
+
+    let remainingQuantity = requiredQuantity;
+    const allocations = [];
+
+    for (const batch of batches) {
+      if (remainingQuantity <= 0) break;
+
+      const allocatedQuantity = Math.min(remainingQuantity, batch.Quantity);
+      allocations.push({ BatchID: batch.BatchID, Quantity: allocatedQuantity });
+      remainingQuantity -= allocatedQuantity;
+    }
+
+    if (remainingQuantity > 0) {
+      return callback(new Error('Insufficient quantity in batches'));
+    }
+
+    const allocationQueries = allocations.map(({ BatchID, Quantity }) => {
+      return new Promise((resolve, reject) => {
+        const usageQuery = `INSERT INTO ProductBatchUsage (JobID, ProductID, RawMaterialID, BatchID, Quantity) VALUES (?, ?, ?, ?, ?)`;
+        connection.query(usageQuery, [jobID, productID, rawMaterialID, BatchID, Quantity], (usageError) => {
+          if (usageError) {
+            return reject(usageError);
+          }
+
+          const batchQuery = `UPDATE BatchRawMaterial SET Quantity = Quantity - ? WHERE BatchID = ? AND RawMaterialID = ?`;
+          connection.query(batchQuery, [Quantity, BatchID, rawMaterialID], (updateError) => {
+            if (updateError) {
+              return reject(updateError);
+            }
+            resolve();
+          });
+        });
+      });
+    });
+
+    Promise.all(allocationQueries)
+      .then(() => callback(null))
+      .catch(callback);
+  });
+};
 
 // Fetch products for a specific job
 router.get('/:jobId/products', (req, res) => {
@@ -282,7 +305,7 @@ router.get('/rawmaterial/:rawMaterialId/batches', (req, res) => {
 
   const batchQuery = `
     SELECT BatchID, RawMaterialID, Quantity, UnitPrice, DateReceived 
-    FROM batchrawmaterial 
+    FROM BatchRawMaterial 
     WHERE RawMaterialID = ?
   `;
 

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ShowroomNavbar from '../../Components/showroom/showroom_navbar';
-import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from "flowbite-react";
+import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, Button } from "flowbite-react";
 import SearchBar from '../../Components/showroom/SearchBar';
-import { Button } from "flowbite-react";
 import AddRawMaterialModal from '../../Components/rawmaterialmodal/addrawmaterialmodal';
 import EditRawMaterialModal from '../../Components/rawmaterialmodal/editrawmaterialmodal';
 import { HiPlus } from "react-icons/hi";
@@ -13,6 +12,8 @@ const RawMaterial = () => {
   const [EditRawMaterialModalIsOpen, setEditRawMaterialModalIsOpen] = useState(false);
   const [rawMaterials, setRawMaterials] = useState([]);
   const [selectedRawMaterial, setSelectedRawMaterial] = useState(null);
+  const [batchDetails, setBatchDetails] = useState({});
+  const [selectedRawMaterialID, setSelectedRawMaterialID] = useState(null);
 
   useEffect(() => {
     fetchRawMaterials();
@@ -25,6 +26,19 @@ const RawMaterial = () => {
       })
       .catch(error => {
         console.error('Error fetching raw material data:', error);
+      });
+  };
+
+  const fetchBatchDetails = (rawMaterialId) => {
+    axios.get(`http://localhost:3001/api/rawmaterial/${rawMaterialId}/batches`)
+      .then(response => {
+        setBatchDetails((prevState) => ({
+          ...prevState,
+          [rawMaterialId]: response.data,
+        }));
+      })
+      .catch(error => {
+        console.error('Error fetching batch details:', error);
       });
   };
 
@@ -44,6 +58,15 @@ const RawMaterial = () => {
   const closeEditRawMaterialModal = () => {
     setEditRawMaterialModalIsOpen(false);
     setSelectedRawMaterial(null);
+  };
+
+  const handleRowClick = (rawMaterial) => {
+    if (selectedRawMaterialID === rawMaterial.RawMaterialID) {
+      setSelectedRawMaterialID(null);
+    } else {
+      setSelectedRawMaterialID(rawMaterial.RawMaterialID);
+      fetchBatchDetails(rawMaterial.RawMaterialID);
+    }
   };
 
   const getStatus = (currentStock) => {
@@ -79,29 +102,64 @@ const RawMaterial = () => {
           <div className="table-container" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 250px)' }}>
             <Table hoverable>
               <TableHead>
-                <TableHeadCell>Raw Material</TableHeadCell>
-                <TableHeadCell>Last Update</TableHeadCell>
-                <TableHeadCell>Current Stock</TableHeadCell>
-                <TableHeadCell>Status</TableHeadCell>
-                <TableHeadCell>
-                  <span className="sr-only">Edit</span>
-                </TableHeadCell>
+                
+                  <TableHeadCell>Raw Material</TableHeadCell>
+                  <TableHeadCell>Last Update</TableHeadCell>
+                  <TableHeadCell>Current Stock</TableHeadCell>
+                  <TableHeadCell>Status</TableHeadCell>
+                  <TableHeadCell>
+                    <span className="sr-only">Edit</span>
+                  </TableHeadCell>
+                
               </TableHead>
               <TableBody className="divide-y">
                 {rawMaterials.map(rawMaterial => (
-                  <TableRow key={rawMaterial.RawMaterialID} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                    <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                      {rawMaterial.RawMaterial}
-                    </TableCell>
-                    <TableCell>{new Date(rawMaterial.LastUpdate).toDateString()}</TableCell>
-                    <TableCell>{rawMaterial.CurrentStock}</TableCell>
-                    <TableCell>{getStatus(rawMaterial.CurrentStock)}</TableCell>
-                    <TableCell>
-                      <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openEditRawMaterialModal(rawMaterial)}>
-                        Add Stock
-                      </a>
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment key={rawMaterial.RawMaterialID}>
+                    <TableRow
+                      className="bg-white dark:border-gray-700 dark:bg-gray-800 cursor-pointer"
+                      onClick={() => handleRowClick(rawMaterial)}
+                    >
+                      <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                        {rawMaterial.RawMaterial}
+                      </TableCell>
+                      <TableCell>{new Date(rawMaterial.LastUpdate).toDateString()}</TableCell>
+                      <TableCell>{rawMaterial.CurrentStock}</TableCell>
+                      <TableCell>{getStatus(rawMaterial.CurrentStock)}</TableCell>
+                      <TableCell>
+                        <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={(e) => { e.stopPropagation(); openEditRawMaterialModal(rawMaterial); }}>
+                          Add Stock
+                        </a>
+                      </TableCell>
+                    </TableRow>
+                    {selectedRawMaterialID === rawMaterial.RawMaterialID && batchDetails[rawMaterial.RawMaterialID] && (
+                      <TableRow className="bg-gray-100 dark:bg-gray-700">
+                        <TableCell colSpan="5">
+                          <div className="overflow-x-auto">
+                            <Table className="min-w-full divide-y divide-gray-200">
+                              <TableHead>
+                                
+                                  <TableHeadCell>Batch ID</TableHeadCell>
+                                  <TableHeadCell>Supplier Name</TableHeadCell>
+                                  <TableHeadCell>Quantity</TableHeadCell>
+                                  <TableHeadCell>Unit Price</TableHeadCell>
+                                
+                              </TableHead>
+                              <TableBody className="bg-white divide-y divide-gray-200">
+                                {batchDetails[rawMaterial.RawMaterialID].map((batch, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{batch.BatchID}</TableCell>
+                                    <TableCell>{batch.SupplierName}</TableCell>
+                                    <TableCell>{batch.Quantity}</TableCell>
+                                    <TableCell>{batch.UnitPrice}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>

@@ -1,18 +1,7 @@
 import React from 'react';
-import { Label, Select, TextInput, Button } from 'flowbite-react';
+import { Label, TextInput, Button, Select } from 'flowbite-react';
 
-const AddCustomizedJobDetails = ({ 
-  rawMaterials, 
-  setRawMaterials, 
-  rawMaterialLoad, 
-  rawMaterialBatches, 
-  handleRawMaterialChange, 
-  addRawMaterial, 
-  removeRawMaterial, 
-  handleImageChange, 
-  customProductName, 
-  setCustomProductName 
-}) => {
+const AddCustomizedJobDetails = ({ rawMaterials, setRawMaterials, rawMaterialLoad, handleRawMaterialChange, addRawMaterial, removeRawMaterial, handleImageChange, customProductName, setCustomProductName }) => {
   return (
     <div>
       <div className="space-y-3">
@@ -55,20 +44,6 @@ const AddCustomizedJobDetails = ({
             />
             <Button type="button" color="red" onClick={() => removeRawMaterial(index)}>Remove</Button>
           </div>
-
-          <Label value="Batches" className="block mb-1" />
-          <Select
-            value={rawMaterial.batch}
-            onChange={(e) => handleRawMaterialChange(index, 'batch', e.target.value)}
-            required
-          >
-            <option value="">Select batch</option>
-            {(rawMaterialBatches[rawMaterial.material] || []).map(batch => (
-              <option key={batch.BatchID} value={batch.BatchID}>
-                {`Batch ${batch.BatchID} - Qty: ${batch.Quantity}, Price: ${batch.UnitPrice} `}
-              </option>
-            ))}
-          </Select>
         </div>
       ))}
       <div className="mb-4">

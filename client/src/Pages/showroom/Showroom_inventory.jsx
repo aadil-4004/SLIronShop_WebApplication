@@ -6,7 +6,7 @@ import { Button } from "flowbite-react";
 import AddProductModal from '../../Components/productmodal/addproductmodal';
 import EditProductModal from '../../Components/productmodal/editproductmodal';
 import ViewProductModal from '../../Components/productmodal/viewproductmodal'; // Import the ViewProductModal component
-import { HiPlus } from "react-icons/hi";
+import { HiPlus, HiEye, HiPencil } from "react-icons/hi";
 import axios from 'axios';
 
 const Showroom_inventory = () => {
@@ -110,16 +110,13 @@ const Showroom_inventory = () => {
                   <TableCell>{product.WorkmanCharge}</TableCell>
                   <TableCell>{product.MRP}</TableCell>
                   <TableCell>{new Date(product.LastUpdate).toDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex">
-                      <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openViewProductModal(product)}>
-                        View
-                      </a>
-                      <span className="mx-2">|</span>
-                      <a href="#" className="font-medium text-cyan-600 hover:underline dark:text-cyan-500" onClick={() => openEditProductModal(product)}>
-                        Edit
-                      </a>
-                    </div>
+                  <TableCell className="flex space-x-2">
+                    <Button onClick={() => openViewProductModal(product)} color="green">
+                      <HiEye className="h-5 w-5" />
+                    </Button>
+                    <Button onClick={() => openEditProductModal(product)} color="blue">
+                      <HiPencil className="h-5 w-5" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

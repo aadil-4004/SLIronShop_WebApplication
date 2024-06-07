@@ -1,11 +1,7 @@
 import React from 'react';
 import { Label, Select, TextInput, Button } from 'flowbite-react';
 
-const AddNormalJobDetails = ({ products, setProducts, productLoad, handleProductChange, addProduct, removeProduct, rawMaterialBatches }) => {
-  const handleRawMaterialChange = (productIndex, rmIndex, field, value) => {
-    handleProductChange(productIndex, `rawMaterials[${rmIndex}].${field}`, value);
-  };
-
+const AddNormalJobDetails = ({ products, setProducts, productLoad, handleProductChange, addProduct, removeProduct }) => {
   return (
     <div>
       {products.map((product, index) => (
@@ -41,19 +37,6 @@ const AddNormalJobDetails = ({ products, setProducts, productLoad, handleProduct
             <div key={rmIndex} className="mb-2 p-2 border rounded">
               <Label value={`Material: ${rawMaterial.materialName}`} className="block mb-1" />
               <Label value={`Quantity: ${rawMaterial.quantity}`} className="block mb-1" />
-              <Label value="Batches" className="block mb-1" />
-              <Select
-                value={rawMaterial.batch}
-                onChange={(e) => handleRawMaterialChange(index, rmIndex, 'batch', e.target.value)}
-                required
-              >
-                <option value="">Select batch</option>
-                {(rawMaterialBatches[rawMaterial.material] || []).map(batch => (
-                  <option key={batch.BatchID} value={batch.BatchID}>
-                    {`Batch ${batch.BatchID} - Qty: ${batch.Quantity}, Price: ${batch.UnitPrice} `}
-                  </option>
-                ))}
-              </Select>
             </div>
           ))}
         </div>

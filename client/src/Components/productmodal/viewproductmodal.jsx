@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Button } from 'flowbite-react';
+import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, Button } from 'flowbite-react';
 import axios from 'axios';
 
 Modal.setAppElement('#root');
@@ -44,36 +44,52 @@ const ViewProductModal = ({ isOpen, closeModal, product }) => {
 
   return (
     <Modal isOpen={isOpen} onRequestClose={closeModal} style={customStyles}>
-      <h2 className="text-2xl text-center">View Product</h2>
+      <h2 className="text-2xl text-center mb-4">View Product</h2>
       {product ? (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">{product.ProductName}</h3>
-          <p>Workman Charge: {product.WorkmanCharge}</p>
-          <p>MRP: {product.MRP}</p>
-          <p>Category: {product.Category}</p>
-          {product.Image && (
-            <img
-              src={`http://localhost:3001/${product.Image}`}
-              alt={product.ProductName}
-              style={{ maxWidth: '100%', maxHeight: '200px' }}
-            />
-          )}
-          <h4 className="text-lg font-semibold mt-4">Raw Materials</h4>
-          {rawMaterials.length > 0 ? (
-            rawMaterials.map((rm) => (
-              <div key={rm.material} className="mb-2">
-                <p>{rm.materialName}: {rm.quantity}</p>
-              </div>
-            ))
-          ) : (
-            <p>No raw materials data available.</p>
-          )}
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold">{product.ProductName}</h3>
+            <p><strong>Workman Charge:</strong> {product.WorkmanCharge}</p>
+            <p><strong>MRP:</strong> {product.MRP}</p>
+            <p><strong>Category:</strong> {product.Category}</p>
+            {product.Image && (
+              <img
+                src={`http://localhost:3001/${product.Image}`}
+                alt={product.ProductName}
+                style={{ maxWidth: '100%', maxHeight: '200px' }}
+                className="mt-2"
+              />
+            )}
+          </div>
+          <div>
+            <h4 className="text-lg font-semibold">Raw Materials</h4>
+            {rawMaterials.length > 0 ? (
+              <Table hoverable>
+                <TableHead>
+                  
+                    <TableHeadCell>Material Name</TableHeadCell>
+                    <TableHeadCell>Quantity</TableHeadCell>
+                  
+                </TableHead>
+                <TableBody>
+                  {rawMaterials.map((rm, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{rm.materialName}</TableCell>
+                      <TableCell>{rm.quantity}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p>No raw materials data available.</p>
+            )}
+          </div>
         </div>
       ) : (
         <p>No product details available.</p>
       )}
-      <div className="w-full mt-5">
-        <Button onClick={closeModal}>Close</Button>
+      <div className="flex justify-end mt-4">
+        <Button onClick={closeModal} color="warning">Close</Button>
       </div>
     </Modal>
   );

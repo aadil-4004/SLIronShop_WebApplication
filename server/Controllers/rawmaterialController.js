@@ -58,21 +58,23 @@ router.get('/types', (req, res) => {
 // Fetch batches for a specific raw material
 router.get('/:rawMaterialId/batches', (req, res) => {
     const rawMaterialId = req.params.rawMaterialId;
-  
+
     const batchQuery = `
-      SELECT BatchID, RawMaterialID, Quantity, UnitPrice, DateReceived 
-      FROM batchrawmaterial 
-      WHERE RawMaterialID = ?
+      SELECT br.BatchID, br.RawMaterialID, br.Quantity, br.UnitPrice, br.DateReceived, s.SupplierName
+      FROM batchrawmaterial br
+      JOIN supplier s ON br.SupplierID = s.SupplierID
+      WHERE br.RawMaterialID = ?
     `;
-  
+
     connection.query(batchQuery, [rawMaterialId], (error, results) => {
       if (error) {
         console.error('Error fetching batches:', error);
         return res.status(500).json({ error: 'Error fetching batches' });
       }
-  
+
       res.json(results);
     });
-  });
+});
+
 
 module.exports = router;

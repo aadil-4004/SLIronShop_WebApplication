@@ -4,6 +4,7 @@ import { Radio, Tabs, Label, Select, TextInput, Button } from 'flowbite-react';
 import AddNormalJobDetails from '../jobmodal/addnormaljobmodal';
 import AddCustomizedJobDetails from '../jobmodal/addcustomizedjobmodal';
 import axios from 'axios';
+import AddCustomerModal from '../customermodal/addcustomermodal'; // Import AddCustomerModal
 
 const customStyles = {
   content: {
@@ -41,6 +42,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [customers, setCustomers] = useState([]);
   const [image, setImage] = useState(null);
   const [customProductName, setCustomProductName] = useState('');
+  const [addCustomerModalIsOpen, setAddCustomerModalIsOpen] = useState(false); // State for AddCustomerModal
 
   useEffect(() => {
     if (isOpen) {
@@ -60,15 +62,19 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           console.error('Error fetching raw materials:', error);
         });
 
-      axios.get('http://localhost:3001/api/customers')
-        .then(response => {
-          setCustomers(response.data);
-        })
-        .catch(error => {
-          console.error('Error fetching customers:', error);
-        });
+      fetchCustomers(); // Fetch customers when the modal is opened
     }
   }, [isOpen]);
+
+  const fetchCustomers = () => {
+    axios.get('http://localhost:3001/api/customers')
+      .then(response => {
+        setCustomers(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching customers:', error);
+      });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,19 +108,12 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const handleProductChange = async (index, field, value) => {
     const updatedProducts = products.map((product, i) => {
       if (i === index) {
-        const updatedRawMaterials = product.rawMaterials.map((rm, rmIndex) => {
-          if (field === `rawMaterials[${rmIndex}].batch`) {
-            return { ...rm, batch: value };
-          }
-          return rm;
-        });
-  
-        return { ...product, [field]: value, rawMaterials: updatedRawMaterials };
+        return { ...product, [field]: value };
       }
       return product;
     });
     setProducts(updatedProducts);
-  
+
     if (field === 'product') {
       try {
         const response = await axios.get(`http://localhost:3001/api/product/${value}/rawmaterials`);
@@ -126,7 +125,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           return product;
         });
         setProducts(updatedProductsWithRawMaterials);
-  
+
         // Fetch batches for each raw material
         const batchesPromises = rawMaterials.map((rm) => axios.get(`http://localhost:3001/api/rawmaterial/${rm.material}/batches`));
         const batchesResponses = await Promise.all(batchesPromises);
@@ -143,8 +142,6 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       }
     }
   };
-  
-  
 
   const handleRawMaterialChange = async (index, field, value) => {
     const updatedRawMaterials = rawMaterials.map((rm, i) => {
@@ -210,6 +207,9 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
                     </option>
                   ))}
                 </Select>
+                <Button onClick={() => setAddCustomerModalIsOpen(true)} color="light" className="mt-2">
+                  Add New Customer
+                </Button>
               </div>
               <div>
                 <Label htmlFor="dueDate" value="Due Date" className="mb-2 block" />
@@ -315,6 +315,11 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           <Button type="submit" color="success">Add Job</Button>
         </div>
       </form>
+      <AddCustomerModal
+        isOpen={addCustomerModalIsOpen}
+        closeModal={() => setAddCustomerModalIsOpen(false)}
+        fetchCustomers={fetchCustomers}
+      />
     </Modal>
   );
 };
