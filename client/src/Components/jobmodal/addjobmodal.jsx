@@ -102,12 +102,19 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const handleProductChange = async (index, field, value) => {
     const updatedProducts = products.map((product, i) => {
       if (i === index) {
-        return { ...product, [field]: value };
+        const updatedRawMaterials = product.rawMaterials.map((rm, rmIndex) => {
+          if (field === `rawMaterials[${rmIndex}].batch`) {
+            return { ...rm, batch: value };
+          }
+          return rm;
+        });
+  
+        return { ...product, [field]: value, rawMaterials: updatedRawMaterials };
       }
       return product;
     });
     setProducts(updatedProducts);
-
+  
     if (field === 'product') {
       try {
         const response = await axios.get(`http://localhost:3001/api/product/${value}/rawmaterials`);
@@ -119,7 +126,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           return product;
         });
         setProducts(updatedProductsWithRawMaterials);
-
+  
         // Fetch batches for each raw material
         const batchesPromises = rawMaterials.map((rm) => axios.get(`http://localhost:3001/api/rawmaterial/${rm.material}/batches`));
         const batchesResponses = await Promise.all(batchesPromises);
@@ -136,6 +143,8 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       }
     }
   };
+  
+  
 
   const handleRawMaterialChange = async (index, field, value) => {
     const updatedRawMaterials = rawMaterials.map((rm, i) => {

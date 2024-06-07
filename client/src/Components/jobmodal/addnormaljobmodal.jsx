@@ -2,6 +2,10 @@ import React from 'react';
 import { Label, Select, TextInput, Button } from 'flowbite-react';
 
 const AddNormalJobDetails = ({ products, setProducts, productLoad, handleProductChange, addProduct, removeProduct, rawMaterialBatches }) => {
+  const handleRawMaterialChange = (productIndex, rmIndex, field, value) => {
+    handleProductChange(productIndex, `rawMaterials[${rmIndex}].${field}`, value);
+  };
+
   return (
     <div>
       {products.map((product, index) => (
@@ -40,7 +44,7 @@ const AddNormalJobDetails = ({ products, setProducts, productLoad, handleProduct
               <Label value="Batches" className="block mb-1" />
               <Select
                 value={rawMaterial.batch}
-                onChange={(e) => handleProductChange(index, `rawMaterials[${rmIndex}].batch`, e.target.value)}
+                onChange={(e) => handleRawMaterialChange(index, rmIndex, 'batch', e.target.value)}
                 required
               >
                 <option value="">Select batch</option>

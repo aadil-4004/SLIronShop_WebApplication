@@ -38,7 +38,7 @@ router.get('/', (req, res) => {
 router.post('/', upload.single('image'), (req, res) => {
   console.log('Request Body:', req.body); // Log the request body
 
-  const { dueDate, status, customerID, note, assignedEmployee, customProductName } = req.body; // Ensure EmployeeName is passed correctly
+  const { dueDate, status, customerID, note, assignedEmployee, customProductName } = req.body;
   let products = [];
   let rawMaterials = [];
 
@@ -71,14 +71,64 @@ router.post('/', upload.single('image'), (req, res) => {
 
       // Add products or raw materials based on job type
       if (products.length > 0) {
-        const productQueries = products.map(({ product, quantity }) => {
+        const productQueries = products.map(({ product, quantity, rawMaterials }) => {
           return new Promise((resolve, reject) => {
             const productQuery = 'INSERT INTO NormalJob (JobID, ProductID, Quantity) VALUES (?, ?, ?)';
-            connection.query(productQuery, [jobID, product, quantity], (productError) => {
+            connection.query(productQuery, [jobID, product, quantity], async (productError) => {
               if (productError) {
                 return reject(productError);
               }
-              resolve();
+
+              // Process raw materials for the product
+              const rawMaterialQueries = rawMaterials.map(({ material, batch, quantity: rmQuantity }) => {
+                return new Promise((resolveRM, rejectRM) => {
+                  const checkQuery = 'SELECT * FROM ProductBatchUsage WHERE JobID = ? AND ProductID = ? AND RawMaterialID = ? AND BatchID = ?';
+                  connection.query(checkQuery, [jobID, product, material, batch], (checkError, checkResults) => {
+                    if (checkError) {
+                      return rejectRM(checkError);
+                    }
+
+                    if (checkResults.length > 0) {
+                      // If the entry exists, update the quantity
+                      const existingEntry = checkResults[0];
+                      const updateQuery = 'UPDATE ProductBatchUsage SET Quantity = Quantity + ? WHERE UsageID = ?';
+                      connection.query(updateQuery, [rmQuantity * quantity, existingEntry.UsageID], (updateError) => {
+                        if (updateError) {
+                          return rejectRM(updateError);
+                        }
+
+                        const batchQuery = 'UPDATE batchrawmaterial SET Quantity = Quantity - ? WHERE BatchID = ? AND RawMaterialID = ?';
+                        connection.query(batchQuery, [rmQuantity * quantity, batch, material], (batchError) => {
+                          if (batchError) {
+                            return rejectRM(batchError);
+                          }
+                          resolveRM();
+                        });
+                      });
+                    } else {
+                      // If the entry does not exist, insert a new one
+                      const usageQuery = 'INSERT INTO ProductBatchUsage (JobID, ProductID, RawMaterialID, BatchID, Quantity) VALUES (?, ?, ?, ?, ?)';
+                      connection.query(usageQuery, [jobID, product, material, batch, rmQuantity * quantity], (usageError) => {
+                        if (usageError) {
+                          return rejectRM(usageError);
+                        }
+
+                        const batchQuery = 'UPDATE batchrawmaterial SET Quantity = Quantity - ? WHERE BatchID = ? AND RawMaterialID = ?';
+                        connection.query(batchQuery, [rmQuantity * quantity, batch, material], (batchError) => {
+                          if (batchError) {
+                            return rejectRM(batchError);
+                          }
+                          resolveRM();
+                        });
+                      });
+                    }
+                  });
+                });
+              });
+
+              Promise.all(rawMaterialQueries)
+                .then(resolve)
+                .catch(reject);
             });
           });
         });
@@ -102,14 +152,30 @@ router.post('/', upload.single('image'), (req, res) => {
             });
           });
       } else if (rawMaterials.length > 0) {
-        const rawMaterialQueries = rawMaterials.map(({ material, quantity }) => {
+        const rawMaterialQueries = rawMaterials.map(({ material, quantity, batch }) => {
           return new Promise((resolve, reject) => {
             const rawMaterialQuery = 'INSERT INTO CustomJob (JobID, RawMaterialID, Quantity, CustomProductName, ImagePath) VALUES (?, ?, ?, ?, ?)';
             connection.query(rawMaterialQuery, [jobID, material, quantity, customProductName, imagePath], (rawMaterialError) => {
               if (rawMaterialError) {
                 return reject(rawMaterialError);
               }
-              resolve();
+
+              // Insert into ProductBatchUsage table
+              const usageQuery = 'INSERT INTO ProductBatchUsage (JobID, ProductID, RawMaterialID, BatchID, Quantity) VALUES (?, ?, ?, ?, ?)';
+              connection.query(usageQuery, [jobID, null, material, batch, quantity], (usageError) => {
+                if (usageError) {
+                  return reject(usageError);
+                }
+
+                // Deduct quantity from the batch
+                const batchQuery = 'UPDATE batchrawmaterial SET Quantity = Quantity - ? WHERE BatchID = ? AND RawMaterialID = ?';
+                connection.query(batchQuery, [quantity, batch, material], (batchError) => {
+                  if (batchError) {
+                    return reject(batchError);
+                  }
+                  resolve();
+                });
+              });
             });
           });
         });
@@ -195,7 +261,7 @@ router.get('/:jobId/productbatchusage', (req, res) => {
 
   const productBatchUsageQuery = `
     SELECT pbu.UsageID, pbu.ProductID, p.ProductName, pbu.RawMaterialID, pbu.BatchID, pbu.Quantity
-    FROM productbatchusage pbu
+    FROM ProductBatchUsage pbu
     JOIN product p ON pbu.ProductID = p.ProductID
     WHERE pbu.JobID = ?
   `;
