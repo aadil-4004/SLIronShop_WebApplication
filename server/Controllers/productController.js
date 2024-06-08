@@ -56,9 +56,8 @@ router.get('/rawmaterial', (req, res) => {
 // Add a new product
 router.post('/', upload.single('image'), (req, res) => {
   const { productName, workmanCharge, mrp, category } = req.body;
-  let rawMaterials = req.body.rawMaterials;
+  let rawMaterials = req.body.rawMaterials ? JSON.parse(req.body.rawMaterials) : [];
   const imagePath = req.file ? req.file.path : null;
-
 
   connection.beginTransaction((transactionError) => {
     if (transactionError) {
@@ -113,11 +112,10 @@ router.post('/', upload.single('image'), (req, res) => {
 // Update an existing product
 router.put('/:productId', upload.single('image'), (req, res) => {
   const productId = req.params.productId;
-  const { productName, workmanCharge, mrp, category } = req.body;
-  let rawMaterials = req.body.rawMaterials;
-  const imagePath = req.file ? req.file.path : null;
+  const { productName, workmanCharge, mrp, category, existingImagePath } = req.body;
+  let rawMaterials = req.body.rawMaterials ? JSON.parse(req.body.rawMaterials) : [];
+  const imagePath = req.file ? req.file.path : existingImagePath; // Use the new image if provided, otherwise use the existing image path
 
- 
   connection.beginTransaction((transactionError) => {
     if (transactionError) {
       console.error('Error starting transaction:', transactionError);

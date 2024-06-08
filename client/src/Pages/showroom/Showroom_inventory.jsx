@@ -96,7 +96,7 @@ const Showroom_inventory = () => {
               <TableHeadCell>Product Name</TableHeadCell>
               <TableHeadCell>Category</TableHeadCell>
               <TableHeadCell>Workman Charge</TableHeadCell>
-              <TableHeadCell>Markup Profit %</TableHeadCell>
+              <TableHeadCell>MRP</TableHeadCell>
               <TableHeadCell>Last Update</TableHeadCell>
               <TableHeadCell>Actions</TableHeadCell> {/* Add a new table head cell for Actions */}
             </TableHead>

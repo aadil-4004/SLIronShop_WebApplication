@@ -27,6 +27,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     workmanCharge: product.WorkmanCharge,
     mrp: product.MRP,
     category: product.Category,
+    imagePath: product.Image, // Store the existing image path
   });
   const [imageFile, setImageFile] = useState(null); // New state for image file
   const [rawMaterials, setRawMaterials] = useState([]);
@@ -93,6 +94,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
     formDataToSend.append('mrp', formData.mrp);
     formDataToSend.append('category', formData.category);
     formDataToSend.append('rawMaterials', JSON.stringify(rawMaterials));
+    formDataToSend.append('existingImagePath', formData.imagePath); // Always send the existing image path
     if (imageFile) {
       formDataToSend.append('image', imageFile);
     }
@@ -180,6 +182,15 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
               accept="image/*"
               onChange={handleImageChange}
             />
+            {formData.imagePath && (
+              <div className="mt-2">
+                <img
+                  src={`http://localhost:3001/${formData.imagePath}`}
+                  alt="Current Product"
+                  style={{ maxWidth: '100%', maxHeight: '200px' }}
+                />
+              </div>
+            )}
           </div>
           <div>
             <h4 className="text-lg font-semibold">Raw Materials</h4>
@@ -194,7 +205,7 @@ const EditProductModal = ({ isOpen, closeModal, fetchProducts, product }) => {
                   onChange={(e) => handleRawMaterialChange(index, e)}
                   placeholder="Enter material"
                   required
-                  readonly
+                  readOnly
                 />
                 <Label htmlFor={`quantity-${index}`} />
                 <TextInput

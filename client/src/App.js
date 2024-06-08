@@ -6,7 +6,7 @@ import ShowroomDashbaord from './Pages/showroom/ShowroomDashbaord';
 import NotFoundPage from './Pages/Common pages/PageNotFound';
 import Catalogue from './Pages/Common pages/catalogue';
 
-import ShowroomOrders from './Pages/showroom/Showroom_orders';
+import Invoices from './Pages/showroom/Invoices';
 import ShowroomCustomers from './Pages/showroom/Showroom_customers';
 import ShowroomInventory from './Pages/showroom/Showroom_inventory';
 import ShowroomSettings from './Pages/showroom/Showroom_settings';
@@ -23,7 +23,7 @@ function App() {
         <Route exact path="/" element={<MainPage/>} />
         <Route exact path="/dashboard" element={<ShowroomDashbaord/>} />
         <Route exact path="/catalogue" element={<Catalogue/>} />
-        <Route exact path="/orders" element={<ShowroomOrders/>} />
+        <Route exact path="/invoices" element={<Invoices/>} />
         <Route exact path="/inventory" element={<ShowroomInventory/>} />
         <Route exact path="/customers" element={<ShowroomCustomers/>} />
         <Route exact path="/settings" element={<ShowroomSettings/>} />
