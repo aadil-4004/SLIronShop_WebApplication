@@ -70,16 +70,14 @@ const Invoices = () => {
         <div className="overflow-x-auto px-10">
           <Table hoverable className="w-full">
             <TableHead>
-              
-                <TableHeadCell>Invoice ID</TableHeadCell>
-                <TableHeadCell>Customer Name</TableHeadCell>
-                <TableHeadCell>Date</TableHeadCell>
-                <TableHeadCell>Status</TableHeadCell>
-                <TableHeadCell>Total Amount</TableHeadCell>
-                <TableHeadCell>
-                  <span className="sr-only">Actions</span>
-                </TableHeadCell>
-              
+              <TableHeadCell>Invoice ID</TableHeadCell>
+              <TableHeadCell>Customer Name</TableHeadCell>
+              <TableHeadCell>Date</TableHeadCell>
+              <TableHeadCell>Status</TableHeadCell>
+              <TableHeadCell>Total Amount</TableHeadCell>
+              <TableHeadCell>
+                <span className="sr-only">Actions</span>
+              </TableHeadCell>
             </TableHead>
             <TableBody className="divide-y">
               {filteredInvoices.map((invoice) => (

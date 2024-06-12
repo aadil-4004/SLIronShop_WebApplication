@@ -64,138 +64,8 @@ router.get('/:invoiceId/lineitems', (req, res) => {
 
 // Add a new invoice
 router.post('/', (req, res) => {
-    const { customerID, jobID, status, lineItems } = req.body;
-    const date = new Date(); // Current timestamp
-  
-    connection.beginTransaction((transactionError) => {
-      if (transactionError) {
-        console.error('Error starting transaction:', transactionError);
-        return res.status(500).json({ error: 'Error starting transaction' });
-      }
-  
-      const invoiceQuery = 'INSERT INTO invoices (CustomerID, JobID, Date, Status, TotalAmount) VALUES (?, ?, ?, ?, ?)';
-      const totalAmount = lineItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
-      connection.query(invoiceQuery, [customerID, jobID, date, status, totalAmount], (invoiceError, invoiceResults) => {
-        if (invoiceError) {
-          return connection.rollback(() => {
-            console.error('Error adding invoice:', invoiceError);
-            return res.status(500).json({ error: 'Error adding invoice' });
-          });
-        }
-  
-        const invoiceID = invoiceResults.insertId;
-        const lineItemQueries = lineItems.map(({ description, quantity, price }) => {
-          return new Promise((resolve, reject) => {
-            const lineItemQuery = 'INSERT INTO invoice_line_items (InvoiceID, Description, Quantity, Price) VALUES (?, ?, ?, ?)';
-            connection.query(lineItemQuery, [invoiceID, description, quantity, price], (lineItemError) => {
-              if (lineItemError) {
-                return reject(lineItemError);
-              }
-              resolve();
-            });
-          });
-        });
-  
-        Promise.all(lineItemQueries)
-          .then(() => {
-            connection.commit((commitError) => {
-              if (commitError) {
-                return connection.rollback(() => {
-                  console.error('Error committing transaction:', commitError);
-                  return res.status(500).json({ error: 'Error committing transaction' });
-                });
-              }
-              res.status(201).json({ message: 'Invoice added successfully' });
-            });
-          })
-          .catch((lineItemError) => {
-            return connection.rollback(() => {
-              console.error('Error adding line items:', lineItemError);
-              return res.status(500).json({ error: 'Error adding line items' });
-            });
-          });
-      });
-    });
-  });
-
- // Fetch job details
-router.get('/jobdetails/:jobId', (req, res) => {
-    const jobId = req.params.jobId;
-  
-    const query = `
-      SELECT j.*, 
-             p.ProductName, 
-             p.MRP, 
-             nj.Quantity AS ProductQuantity,
-             c.CustomProductName, 
-             c.ImagePath,
-             c.CustomProductName AS CustomMRP,
-             pb.BatchID,
-             brm.RawMaterialID,
-             brm.UnitPrice,
-             rm.RawMaterial,
-             pb.Quantity AS BatchQuantity
-      FROM jobs j
-      LEFT JOIN normaljob nj ON j.JobID = nj.JobID
-      LEFT JOIN Product p ON nj.ProductID = p.ProductID
-      LEFT JOIN customjob c ON j.JobID = c.JobID
-      LEFT JOIN productbatchusage pb ON j.JobID = pb.JobID
-      LEFT JOIN batchrawmaterial brm ON pb.BatchID = brm.BatchID
-      LEFT JOIN rawmaterial rm ON brm.RawMaterialID = rm.RawMaterialID
-      WHERE j.JobID = ?
-    `;
-  
-    connection.query(query, [jobId], (error, results) => {
-      if (error) {
-        console.error('Error retrieving job details:', error);
-        res.status(500).json({ error: 'Error retrieving job details' });
-      } else {
-        const jobDetails = {
-          products: [],
-          customProduct: null,
-          batches: [],
-        };
-  
-        results.forEach(row => {
-          if (row.ProductName) {
-            jobDetails.products.push({
-              ProductName: row.ProductName,
-              MRP: row.MRP,
-              Quantity: row.ProductQuantity,
-              rawMaterials: [], // Add raw materials fetching logic here if needed
-              batches: []
-            });
-          }
-          if (row.CustomProductName) {
-            jobDetails.customProduct = {
-              CustomProductName: row.CustomProductName,
-              ImagePath: row.ImagePath,
-              MRP: row.CustomMRP,
-              rawMaterials: [], // Add raw materials fetching logic here if needed
-              batches: []
-            };
-          }
-          if (row.BatchID) {
-            jobDetails.batches.push({
-              BatchID: row.BatchID,
-              RawMaterialName: row.RawMaterial,
-              BatchQuantity: row.Quantity,
-              UnitPrice: row.UnitPrice
-            });
-          }
-        });
-  
-        res.json(jobDetails);
-      }
-    });
-  });
-  
-  
-  
-// Update an existing invoice
-router.put('/:invoiceId', (req, res) => {
-  const invoiceId = req.params.invoiceId;
-  const { customerID, jobID, date, status, lineItems } = req.body;
+  const { customerID, jobID, status, totalAmount, discountAmount, totalBillAmount, advancePayment, balance, lineItems } = req.body;
+  const date = new Date(); // Current timestamp
 
   connection.beginTransaction((transactionError) => {
     if (transactionError) {
@@ -203,9 +73,138 @@ router.put('/:invoiceId', (req, res) => {
       return res.status(500).json({ error: 'Error starting transaction' });
     }
 
-    const invoiceUpdateQuery = 'UPDATE invoices SET CustomerID = ?, JobID = ?, Date = ?, Status = ?, TotalAmount = ? WHERE InvoiceID = ?';
-    const totalAmount = lineItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
-    connection.query(invoiceUpdateQuery, [customerID, jobID, date, status, totalAmount, invoiceId], (invoiceError) => {
+    const invoiceQuery = 'INSERT INTO invoices (CustomerID, JobID, Date, Status, TotalAmount, DiscountAmount, TotalBillAmount, AdvancePayment, Balance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    connection.query(invoiceQuery, [customerID, jobID, date, status, totalAmount, discountAmount, totalBillAmount, advancePayment, balance], (invoiceError, invoiceResults) => {
+      if (invoiceError) {
+        return connection.rollback(() => {
+          console.error('Error adding invoice:', invoiceError);
+          return res.status(500).json({ error: 'Error adding invoice' });
+        });
+      }
+
+      const invoiceID = invoiceResults.insertId;
+      const lineItemQueries = lineItems.map(({ description, quantity, price, totalCost, grossProfit }) => {
+        return new Promise((resolve, reject) => {
+          const lineItemQuery = 'INSERT INTO invoice_line_items (InvoiceID, Description, Quantity, Price, TotalCost, GrossProfit) VALUES (?, ?, ?, ?, ?, ?)';
+          connection.query(lineItemQuery, [invoiceID, description, quantity, price, totalCost, grossProfit], (lineItemError) => {
+            if (lineItemError) {
+              return reject(lineItemError);
+            }
+            resolve();
+          });
+        });
+      });
+
+      Promise.all(lineItemQueries)
+        .then(() => {
+          connection.commit((commitError) => {
+            if (commitError) {
+              return connection.rollback(() => {
+                console.error('Error committing transaction:', commitError);
+                return res.status(500).json({ error: 'Error committing transaction' });
+              });
+            }
+            res.status(201).json({ message: 'Invoice added successfully' });
+          });
+        })
+        .catch((lineItemError) => {
+          return connection.rollback(() => {
+            console.error('Error adding line items:', lineItemError);
+            return res.status(500).json({ error: 'Error adding line items' });
+          });
+        });
+    });
+  });
+});
+
+// Fetch job details
+router.get('/jobdetails/:jobId', (req, res) => {
+  const jobId = req.params.jobId;
+
+  const query = `
+    SELECT j.*, 
+           p.ProductName, 
+           p.MRP, 
+           p.WorkmanCharge,
+           nj.Quantity AS ProductQuantity,
+           nj.Cost AS ProductCost,
+           c.CustomProductName, 
+           c.ImagePath,
+           SUM(c.Cost) AS CustomProductCost,
+           pb.BatchID,
+           brm.RawMaterialID,
+           brm.UnitPrice,
+           rm.RawMaterial,
+           pb.Quantity AS BatchQuantity
+    FROM jobs j
+    LEFT JOIN normaljob nj ON j.JobID = nj.JobID
+    LEFT JOIN Product p ON nj.ProductID = p.ProductID
+    LEFT JOIN customjob c ON j.JobID = c.JobID
+    LEFT JOIN productbatchusage pb ON j.JobID = pb.JobID
+    LEFT JOIN batchrawmaterial brm ON pb.BatchID = brm.BatchID
+    LEFT JOIN rawmaterial rm ON brm.RawMaterialID = rm.RawMaterialID
+    WHERE j.JobID = ?
+    GROUP BY j.JobID, p.ProductID, c.CustomProductName, pb.BatchID
+  `;
+
+  connection.query(query, [jobId], (error, results) => {
+    if (error) {
+      console.error('Error retrieving job details:', error);
+      res.status(500).json({ error: 'Error retrieving job details' });
+    } else {
+      const jobDetails = {
+        products: [],
+        customProduct: null,
+        batches: [],
+      };
+
+      results.forEach(row => {
+        if (row.ProductName) {
+          jobDetails.products.push({
+            ProductName: row.ProductName,
+            MRP: row.MRP,
+            WorkmanCharge: row.WorkmanCharge,
+            Quantity: row.ProductQuantity,
+            Cost: row.ProductCost,
+          });
+        }
+        if (row.CustomProductName) {
+          jobDetails.customProduct = {
+            CustomProductName: row.CustomProductName,
+            ImagePath: row.ImagePath,
+            MRP: row.CustomMRP,
+            WorkmanCharge: row.CustomWorkmanCharge,
+            Cost: row.CustomProductCost,
+          };
+        }
+        if (row.BatchID) {
+          jobDetails.batches.push({
+            BatchID: row.BatchID,
+            RawMaterialName: row.RawMaterial,
+            BatchQuantity: row.BatchQuantity,
+            UnitPrice: row.UnitPrice,
+          });
+        }
+      });
+
+      res.json(jobDetails);
+    }
+  });
+});
+
+// Update an existing invoice
+router.put('/:invoiceId', (req, res) => {
+  const invoiceId = req.params.invoiceId;
+  const { customerID, jobID, date, status, totalAmount, discountAmount, totalBillAmount, advancePayment, balance, lineItems } = req.body;
+
+  connection.beginTransaction((transactionError) => {
+    if (transactionError) {
+      console.error('Error starting transaction:', transactionError);
+      return res.status(500).json({ error: 'Error starting transaction' });
+    }
+
+    const invoiceUpdateQuery = 'UPDATE invoices SET CustomerID = ?, JobID = ?, Date = ?, Status = ?, TotalAmount = ?, DiscountAmount = ?, TotalBillAmount = ?, AdvancePayment = ?, Balance = ? WHERE InvoiceID = ?';
+    connection.query(invoiceUpdateQuery, [customerID, jobID, date, status, totalAmount, discountAmount, totalBillAmount, advancePayment, balance, invoiceId], (invoiceError) => {
       if (invoiceError) {
         return connection.rollback(() => {
           console.error('Error updating invoice:', invoiceError);
@@ -222,10 +221,10 @@ router.put('/:invoiceId', (req, res) => {
           });
         }
 
-        const lineItemQueries = lineItems.map(({ description, quantity, price }) => {
+        const lineItemQueries = lineItems.map(({ description, quantity, price, totalCost, gp }) => {
           return new Promise((resolve, reject) => {
-            const lineItemQuery = 'INSERT INTO invoice_line_items (InvoiceID, Description, Quantity, Price) VALUES (?, ?, ?, ?)';
-            connection.query(lineItemQuery, [invoiceId, description, quantity, price], (lineItemError) => {
+            const lineItemQuery = 'INSERT INTO invoice_line_items (InvoiceID, Description, Quantity, Price, TotalCost, GP) VALUES (?, ?, ?, ?, ?, ?)';
+            connection.query(lineItemQuery, [invoiceId, description, quantity, price, totalCost, gp], (lineItemError) => {
               if (lineItemError) {
                 return reject(lineItemError);
               }
@@ -301,22 +300,22 @@ router.delete('/:invoiceId', (req, res) => {
 
 // Fetch jobs by CustomerID
 router.get('/jobs/customer/:customerId', (req, res) => {
-    const customerId = req.params.customerId;
-  
-    const query = `
-      SELECT JobID, DueDate
-      FROM jobs
-      WHERE CustomerID = ?
-    `;
-  
-    connection.query(query, [customerId], (error, results) => {
-      if (error) {
-        console.error('Error retrieving jobs:', error);
-        res.status(500).json({ error: 'Error retrieving jobs' });
-      } else {
-        res.json(results);
-      }
-    });
+  const customerId = req.params.customerId;
+
+  const query = `
+    SELECT JobID, DueDate
+    FROM jobs
+    WHERE CustomerID = ?
+  `;
+
+  connection.query(query, [customerId], (error, results) => {
+    if (error) {
+      console.error('Error retrieving jobs:', error);
+      res.status(500).json({ error: 'Error retrieving jobs' });
+    } else {
+      res.json(results);
+    }
   });
+});
 
 module.exports = router;
