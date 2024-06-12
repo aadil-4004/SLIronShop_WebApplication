@@ -88,7 +88,7 @@ const Invoices = () => {
                   <TableCell>{invoice.CustomerName}</TableCell>
                   <TableCell>{new Date(invoice.Date).toLocaleDateString()}</TableCell>
                   <TableCell>{invoice.Status}</TableCell>
-                  <TableCell>{invoice.TotalAmount}</TableCell>
+                  <TableCell>{invoice.TotalBillAmount}</TableCell>
                   <TableCell className="flex space-x-2">
                     <Button onClick={() => openViewInvoiceModal(invoice)} color="green">
                       <HiEye className="h-5 w-5" />

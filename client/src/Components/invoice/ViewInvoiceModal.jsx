@@ -24,6 +24,7 @@ const customStyles = {
 const ViewInvoiceModal = ({ isOpen, closeModal, invoice }) => {
   const [invoiceDetails, setInvoiceDetails] = useState(null);
   const [lineItems, setLineItems] = useState([]);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     if (invoice) {
@@ -45,28 +46,32 @@ const ViewInvoiceModal = ({ isOpen, closeModal, invoice }) => {
     return null;
   }
 
+  const totalCost = lineItems.reduce((sum, item) => sum + item.TotalCost, 0);
+  const grossProfit = lineItems.reduce((sum, item) => sum + item.GrossProfit, 0);
+
   return (
     <Modal isOpen={isOpen} onRequestClose={closeModal} style={customStyles}>
       <h2 className='text-2xl text-center mb-4'>Invoice Details</h2>
       <div className="space-y-4">
-        <div>
-          <p><strong>Invoice ID:</strong> {invoiceDetails.InvoiceID}</p>
+        <div className="flex justify-between">
           <p><strong>Customer Name:</strong> {invoiceDetails.CustomerName}</p>
-          <p><strong>Date:</strong> {new Date(invoiceDetails.Date).toLocaleDateString()}</p>
+          <div className="text-right">
+            <p><strong>Invoice ID:</strong> {invoiceDetails.InvoiceID}</p>
+            <p><strong>Date:</strong> {new Date(invoiceDetails.Date).toLocaleDateString()}</p>
+          </div>
+        </div>
+        <div>
           <p><strong>Status:</strong> {invoiceDetails.Status}</p>
-          <p><strong>Total Amount:</strong> {invoiceDetails.TotalAmount}</p>
         </div>
         {lineItems.length > 0 && (
           <div>
-            <h3 className="text-xl font-semibold">Line Items</h3>
+            <h3 className="text-xl font-semibold">Items</h3>
             <Table hoverable>
               <TableHead>
-                <TableRow>
                   <TableHeadCell>Description</TableHeadCell>
                   <TableHeadCell>Quantity</TableHeadCell>
                   <TableHeadCell>Price</TableHeadCell>
                   <TableHeadCell>Total</TableHeadCell>
-                </TableRow>
               </TableHead>
               <TableBody>
                 {lineItems.map((item, index) => (
@@ -79,6 +84,35 @@ const ViewInvoiceModal = ({ isOpen, closeModal, invoice }) => {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        )}
+         <div className="flex flex-col items-start space-y-1">
+          <div className="flex justify-between w-full">
+            <p><strong>Total Amount:</strong></p>
+            <p>{invoiceDetails.TotalAmount}</p>
+          </div>
+          <div className="flex justify-between w-full">
+            <p><strong>Discount Amount:</strong></p>
+            <p>{invoiceDetails.DiscountAmount}</p>
+          </div>
+          <div className="flex justify-between w-full">
+            <p><strong>Balance:</strong></p>
+            <p>{invoiceDetails.Balance}</p>
+          </div>
+        </div>
+        <div className="flex justify-start mt-4">
+          <Button onClick={() => setShowDetails(!showDetails)}>{showDetails ? '-' : '+'} Details</Button>
+        </div>
+        {showDetails && (
+          <div className="mt-2">
+            <div className="flex justify-between w-full">
+              <p><strong>Total Cost:</strong></p>
+              <p>{totalCost}</p>
+            </div>
+            <div className="flex justify-between w-full">
+              <p><strong>Gross Profit:</strong></p>
+              <p>{grossProfit}</p>
+            </div>
           </div>
         )}
       </div>

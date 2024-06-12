@@ -172,8 +172,6 @@ router.get('/jobdetails/:jobId', (req, res) => {
           jobDetails.customProduct = {
             CustomProductName: row.CustomProductName,
             ImagePath: row.ImagePath,
-            MRP: row.CustomMRP,
-            WorkmanCharge: row.CustomWorkmanCharge,
             Cost: row.CustomProductCost,
           };
         }
@@ -194,67 +192,22 @@ router.get('/jobdetails/:jobId', (req, res) => {
 
 // Update an existing invoice
 router.put('/:invoiceId', (req, res) => {
-  const invoiceId = req.params.invoiceId;
-  const { customerID, jobID, date, status, totalAmount, discountAmount, totalBillAmount, advancePayment, balance, lineItems } = req.body;
-
-  connection.beginTransaction((transactionError) => {
-    if (transactionError) {
-      console.error('Error starting transaction:', transactionError);
-      return res.status(500).json({ error: 'Error starting transaction' });
-    }
-
-    const invoiceUpdateQuery = 'UPDATE invoices SET CustomerID = ?, JobID = ?, Date = ?, Status = ?, TotalAmount = ?, DiscountAmount = ?, TotalBillAmount = ?, AdvancePayment = ?, Balance = ? WHERE InvoiceID = ?';
-    connection.query(invoiceUpdateQuery, [customerID, jobID, date, status, totalAmount, discountAmount, totalBillAmount, advancePayment, balance, invoiceId], (invoiceError) => {
-      if (invoiceError) {
-        return connection.rollback(() => {
-          console.error('Error updating invoice:', invoiceError);
+    const invoiceId = req.params.invoiceId;
+    const { status, balance } = req.body;
+  
+    connection.query(
+      'UPDATE invoices SET Status = ?, Balance = ? WHERE InvoiceID = ?',
+      [status, balance, invoiceId],
+      (error, results) => {
+        if (error) {
+          console.error('Error updating invoice:', error);
           return res.status(500).json({ error: 'Error updating invoice' });
-        });
-      }
-
-      const deleteOldLineItemsQuery = 'DELETE FROM invoice_line_items WHERE InvoiceID = ?';
-      connection.query(deleteOldLineItemsQuery, [invoiceId], (deleteError) => {
-        if (deleteError) {
-          return connection.rollback(() => {
-            console.error('Error deleting old line items:', deleteError);
-            return res.status(500).json({ error: 'Error deleting old line items' });
-          });
         }
-
-        const lineItemQueries = lineItems.map(({ description, quantity, price, totalCost, gp }) => {
-          return new Promise((resolve, reject) => {
-            const lineItemQuery = 'INSERT INTO invoice_line_items (InvoiceID, Description, Quantity, Price, TotalCost, GP) VALUES (?, ?, ?, ?, ?, ?)';
-            connection.query(lineItemQuery, [invoiceId, description, quantity, price, totalCost, gp], (lineItemError) => {
-              if (lineItemError) {
-                return reject(lineItemError);
-              }
-              resolve();
-            });
-          });
-        });
-
-        Promise.all(lineItemQueries)
-          .then(() => {
-            connection.commit((commitError) => {
-              if (commitError) {
-                return connection.rollback(() => {
-                  console.error('Error committing transaction:', commitError);
-                  return res.status(500).json({ error: 'Error committing transaction' });
-                });
-              }
-              res.status(200).json({ message: 'Invoice updated successfully' });
-            });
-          })
-          .catch((lineItemError) => {
-            return connection.rollback(() => {
-              console.error('Error updating line items:', lineItemError);
-              return res.status(500).json({ error: 'Error updating line items' });
-            });
-          });
-      });
-    });
+        res.status(200).json({ message: 'Invoice updated successfully' });
+      }
+    );
   });
-});
+  
 
 // Delete an invoice
 router.delete('/:invoiceId', (req, res) => {

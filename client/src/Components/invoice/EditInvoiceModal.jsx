@@ -12,7 +12,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90%',
-    width: '500px',
+    width: '300px',
     maxHeight: '80%',
     overflowY: 'auto',
   },
@@ -23,38 +23,20 @@ const customStyles = {
 
 const EditInvoiceModal = ({ isOpen, closeModal, fetchInvoices, invoice }) => {
   const [formData, setFormData] = useState({
-    customerID: '',
-    jobID: '',
-    date: '',
     status: 'Pending',
-    lineItems: [{ description: '', quantity: '', price: '' }],
+    payment: 0,
   });
-  const [customers, setCustomers] = useState([]);
-  const [jobs, setJobs] = useState([]);
+  const [balance, setBalance] = useState(0);
 
   useEffect(() => {
     if (invoice) {
       setFormData({
-        customerID: invoice.CustomerID,
-        jobID: invoice.JobID,
-        date: new Date(invoice.Date).toISOString().split('T')[0],
         status: invoice.Status,
-        lineItems: invoice.lineItems || [{ description: '', quantity: '', price: '' }],
+        payment: 0,
       });
+      setBalance(invoice.Balance);
     }
   }, [invoice]);
-
-  useEffect(() => {
-    if (isOpen) {
-      axios.get('http://localhost:3001/api/customers')
-        .then(response => setCustomers(response.data))
-        .catch(error => console.error('Error fetching customers:', error));
-
-      axios.get('http://localhost:3001/api/jobs')
-        .then(response => setJobs(response.data))
-        .catch(error => console.error('Error fetching jobs:', error));
-    }
-  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,38 +46,14 @@ const EditInvoiceModal = ({ isOpen, closeModal, fetchInvoices, invoice }) => {
     });
   };
 
-  const handleLineItemChange = (index, field, value) => {
-    const updatedLineItems = formData.lineItems.map((item, i) => {
-      if (i === index) {
-        return { ...item, [field]: value };
-      }
-      return item;
-    });
-    setFormData({
-      ...formData,
-      lineItems: updatedLineItems,
-    });
-  };
-
-  const addLineItem = () => {
-    setFormData({
-      ...formData,
-      lineItems: [...formData.lineItems, { description: '', quantity: '', price: '' }],
-    });
-  };
-
-  const removeLineItem = (index) => {
-    const updatedLineItems = formData.lineItems.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      lineItems: updatedLineItems,
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3001/api/invoices/${invoice.InvoiceID}`, formData);
+      const newBalance = balance - parseFloat(formData.payment);
+      await axios.put(`http://localhost:3001/api/invoices/${invoice.InvoiceID}`, {
+        status: formData.status,
+        balance: newBalance,
+      });
       fetchInvoices();
       closeModal();
     } catch (error) {
@@ -109,28 +67,6 @@ const EditInvoiceModal = ({ isOpen, closeModal, fetchInvoices, invoice }) => {
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="customerID" value="Customer" />
-            <Select id="customerID" name="customerID" value={formData.customerID} onChange={handleChange} required>
-              <option value="">Select customer</option>
-              {customers.map(customer => (
-                <option key={customer.CustomerID} value={customer.CustomerID}>{customer.CustomerName}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="jobID" value="Job" />
-            <Select id="jobID" name="jobID" value={formData.jobID} onChange={handleChange} required>
-              <option value="">Select job</option>
-              {jobs.map(job => (
-                <option key={job.JobID} value={job.JobID}>{job.JobID}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="date" value="Date" />
-            <TextInput id="date" name="date" type="date" value={formData.date} onChange={handleChange} required />
-          </div>
-          <div>
             <Label htmlFor="status" value="Status" />
             <Select id="status" name="status" value={formData.status} onChange={handleChange} required>
               <option value="Pending">Pending</option>
@@ -138,41 +74,12 @@ const EditInvoiceModal = ({ isOpen, closeModal, fetchInvoices, invoice }) => {
             </Select>
           </div>
           <div>
-            <h4 className="text-lg font-semibold">Line Items</h4>
-            {formData.lineItems.map((item, index) => (
-              <div key={index} className="flex space-x-3 mb-2">
-                <TextInput
-                  className="flex-1"
-                  name="description"
-                  placeholder="Description"
-                  value={item.description}
-                  onChange={(e) => handleLineItemChange(index, 'description', e.target.value)}
-                  required
-                />
-                <TextInput
-                  className="w-20"
-                  name="quantity"
-                  type="number"
-                  min="0"
-                  placeholder="Qty"
-                  value={item.quantity}
-                  onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)}
-                  required
-                />
-                <TextInput
-                  className="w-20"
-                  name="price"
-                  type="number"
-                  min="0"
-                  placeholder="Price"
-                  value={item.price}
-                  onChange={(e) => handleLineItemChange(index, 'price', e.target.value)}
-                  required
-                />
-                <Button type="button" color="red" onClick={() => removeLineItem(index)}>Remove</Button>
-              </div>
-            ))}
-            <Button type="button" color="green" onClick={addLineItem}>Add Line Item</Button>
+            <Label htmlFor="balance" value="Balance" />
+            <TextInput id="balance" name="balance" type="number" value={balance} readOnly />
+          </div>
+          <div>
+            <Label htmlFor="payment" value="Payment" />
+            <TextInput id="payment" name="payment" type="number" value={formData.payment} onChange={handleChange} required />
           </div>
         </div>
         <div className="flex justify-end mt-4">
