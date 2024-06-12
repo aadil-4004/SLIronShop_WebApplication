@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { Button, Label, Select, TextInput } from 'flowbite-react';
+import { Button, Label, Select, TextInput, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from 'flowbite-react';
 import axios from 'axios';
 
 const customStyles = {
@@ -12,7 +12,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90%',
-    width: '500px',
+    width: '600px',
     maxHeight: '80%',
     overflowY: 'auto',
   },
@@ -25,24 +25,74 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
   const [formData, setFormData] = useState({
     customerID: '',
     jobID: '',
-    date: '',
     status: 'Pending',
+    customMRP: '',
   });
   const [jobs, setJobs] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [lineItems, setLineItems] = useState([]);
+  const [jobDetails, setJobDetails] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
       axios.get('http://localhost:3001/api/customers')
         .then(response => setCustomers(response.data))
         .catch(error => console.error('Error fetching customers:', error));
-
-      axios.get('http://localhost:3001/api/jobs')
-        .then(response => setJobs(response.data))
-        .catch(error => console.error('Error fetching jobs:', error));
     }
   }, [isOpen]);
+
+  const handleCustomerChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+
+    // Fetch jobs for the selected customer
+    axios.get(`http://localhost:3001/api/invoices/jobs/customer/${value}`)
+      .then(response => {
+        setJobs(response.data);
+      })
+      .catch(error => console.error('Error fetching jobs:', error));
+  };
+
+  const handleJobChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+
+    // Fetch job details for the selected job
+    axios.get(`http://localhost:3001/api/invoices/jobdetails/${value}`)
+      .then(response => {
+        setJobDetails(response.data);
+      })
+      .catch(error => console.error('Error fetching job details:', error));
+  };
+
+  const handleProductMRPChange = (index, value) => {
+    const updatedProducts = jobDetails.products.map((product, i) => {
+      if (i === index) {
+        return { ...product, MRP: value };
+      }
+      return product;
+    });
+
+    setJobDetails({
+      ...jobDetails,
+      products: updatedProducts,
+    });
+  };
+
+  const handleCustomMRPChange = (value) => {
+    setJobDetails({
+      ...jobDetails,
+      customProduct: {
+        ...jobDetails.customProduct,
+        MRP: value,
+      },
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,31 +102,12 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
     });
   };
 
-  const handleLineItemChange = (index, field, value) => {
-    const updatedLineItems = lineItems.map((item, i) => {
-      if (i === index) {
-        return { ...item, [field]: value };
-      }
-      return item;
-    });
-    setLineItems(updatedLineItems);
-  };
-
-  const addLineItem = () => {
-    setLineItems([...lineItems, { description: '', quantity: '', price: '' }]);
-  };
-
-  const removeLineItem = (index) => {
-    const updatedLineItems = lineItems.filter((_, i) => i !== index);
-    setLineItems(updatedLineItems);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const invoiceData = {
         ...formData,
-        lineItems,
+        date: new Date().toISOString().split('T')[0],  // Add current timestamp
       };
       await axios.post('http://localhost:3001/api/invoices', invoiceData);
       fetchInvoices();
@@ -93,7 +124,7 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
         <div className="space-y-3 mt-3">
           <div>
             <Label htmlFor="customerID" value="Customer" />
-            <Select id="customerID" name="customerID" value={formData.customerID} onChange={handleChange} required>
+            <Select id="customerID" name="customerID" value={formData.customerID} onChange={handleCustomerChange} required>
               <option value="">Select customer</option>
               {customers.map(customer => (
                 <option key={customer.CustomerID} value={customer.CustomerID}>{customer.CustomerName}</option>
@@ -102,16 +133,163 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
           </div>
           <div>
             <Label htmlFor="jobID" value="Job" />
-            <Select id="jobID" name="jobID" value={formData.jobID} onChange={handleChange} required>
+            <Select id="jobID" name="jobID" value={formData.jobID} onChange={handleJobChange} required>
               <option value="">Select job</option>
               {jobs.map(job => (
-                <option key={job.JobID} value={job.JobID}>{job.JobID}</option>
+                <option key={job.JobID} value={job.JobID}>
+                  {job.JobID} - Due Date: {new Date(job.DueDate).toLocaleDateString()}
+                </option>
               ))}
             </Select>
           </div>
           <div>
-            <Label htmlFor="date" value="Date" />
-            <TextInput id="date" name="date" type="date" value={formData.date} onChange={handleChange} required />
+            {jobDetails && (
+              <>
+                {jobDetails.products && jobDetails.products.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Products</h3>
+                    {jobDetails.products.map((product, index) => (
+                      <div key={index} className="mb-3">
+                        <Label value="Product Name" />
+                        <p>{product.ProductName}</p>
+                        {/* <Label value="Raw Materials" />
+                        <Table hoverable>
+                          <TableHead>
+                            <TableRow>
+                              <TableHeadCell>Raw Material</TableHeadCell>
+                              <TableHeadCell>Quantity</TableHeadCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {product.rawMaterials.map((rawMaterial, rmIndex) => (
+                              <TableRow key={rmIndex}>
+                                <TableCell>{rawMaterial.RawMaterialName}</TableCell>
+                                <TableCell>{rawMaterial.Quantity}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        <Label value="Batches Used" />
+                        <Table hoverable>
+                          <TableHead>
+                            <TableRow>
+                              <TableHeadCell>Batch ID</TableHeadCell>
+                              <TableHeadCell>Quantity Used</TableHeadCell>
+                              <TableHeadCell>Unit Price</TableHeadCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {product.batches.map((batch, batchIndex) => (
+                              <TableRow key={batchIndex}>
+                                <TableCell>{batch.BatchID}</TableCell>
+                                <TableCell>{batch.BatchQuantity}</TableCell>
+                                <TableCell>{batch.UnitPrice}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table> */}
+                        <Label value="Total Cost" />
+                        <TextInput
+                          type="number"
+                          value={product.batches.reduce((total, batch) => total + (batch.BatchQuantity * batch.UnitPrice), 0)}
+                          readOnly
+                        />
+                        <Label htmlFor={`productMRP-${index}`} value="MRP" />
+                        <TextInput
+                          id={`productMRP-${index}`}
+                          type="number"
+                          value={product.MRP}
+                          onChange={(e) => handleProductMRPChange(index, e.target.value)}
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {jobDetails.customProduct && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Custom Product</h3>
+                    <Label value="Custom Product Name" />
+                    <p>{jobDetails.customProduct.CustomProductName}</p>
+                    {/* <Label value="Raw Materials" />
+                    <Table hoverable>
+                      <TableHead>
+                        <TableRow>
+                          <TableHeadCell>Raw Material</TableHeadCell>
+                          <TableHeadCell>Quantity</TableHeadCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {jobDetails.customProduct.rawMaterials.map((rawMaterial, rmIndex) => (
+                          <TableRow key={rmIndex}>
+                            <TableCell>{rawMaterial.RawMaterialName}</TableCell>
+                            <TableCell>{rawMaterial.Quantity}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table> */}
+                    <Label value="Batches Used" />
+                    {/* <Table hoverable>
+                      <TableHead>
+                        <TableRow>
+                          <TableHeadCell>Batch ID</TableHeadCell>
+                          <TableHeadCell>Quantity Used</TableHeadCell>
+                          <TableHeadCell>Unit Price</TableHeadCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {jobDetails.customProduct.batches.map((batch, batchIndex) => (
+                          <TableRow key={batchIndex}>
+                            <TableCell>{batch.BatchID}</TableCell>
+                            <TableCell>{batch.BatchQuantity}</TableCell>
+                            <TableCell>{batch.UnitPrice}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table> */}
+                    <Label value="Total Cost" />
+                    <TextInput
+                      type="number"
+                      value={jobDetails.customProduct.batches.reduce((total, batch) => total + (batch.BatchQuantity * batch.UnitPrice), 0)}
+                      readOnly
+                    />
+                    <Label htmlFor="customMRP" value="MRP" />
+                    <TextInput
+                      id="customMRP"
+                      type="number"
+                      value={jobDetails.customProduct.MRP}
+                      onChange={(e) => handleCustomMRPChange(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+                {jobDetails.batches && jobDetails.batches.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold">Batches Used</h3>
+                    <Table hoverable>
+                      <TableHead>
+                        
+                          <TableHeadCell>Batch ID</TableHeadCell>
+                          <TableHeadCell>Raw Material</TableHeadCell>
+                          <TableHeadCell>Quantity Used</TableHeadCell>
+                          <TableHeadCell>Unit Price</TableHeadCell>
+                       
+                      </TableHead>
+                      <TableBody>
+                        {jobDetails.batches.map((batch, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{batch.BatchID}</TableCell>
+                            <TableCell>{batch.RawMaterialName}</TableCell>
+                            <TableCell>{batch.BatchQuantity}</TableCell>
+                            <TableCell>{batch.UnitPrice}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </>
+            )}
           </div>
           <div>
             <Label htmlFor="status" value="Status" />
@@ -119,42 +297,6 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
               <option value="Pending">Pending</option>
               <option value="Paid">Paid</option>
             </Select>
-          </div>
-          <div>
-            <h4 className="text-lg font-semibold">Line Items</h4>
-            {lineItems.map((item, index) => (
-              <div key={index} className="flex space-x-3 mb-2">
-                <TextInput
-                  className="flex-1"
-                  placeholder="Description"
-                  value={item.description}
-                  onChange={(e) => handleLineItemChange(index, 'description', e.target.value)}
-                  required
-                />
-                <TextInput
-                  className="w-20"
-                  type="number"
-                  placeholder="Qty"
-                  value={item.quantity}
-                  onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)}
-                  required
-                />
-                <TextInput
-                  className="w-20"
-                  type="number"
-                  placeholder="Price"
-                  value={item.price}
-                  onChange={(e) => handleLineItemChange(index, 'price', e.target.value)}
-                  required
-                />
-                <Button type="button" className="bg-red-500 hover:bg-red-700 w-20" onClick={() => removeLineItem(index)}>
-                  Remove
-                </Button>
-              </div>
-            ))}
-            <Button type="button" className="bg-green-500 hover:bg-green-700" onClick={addLineItem}>
-              Add Line Item
-            </Button>
           </div>
         </div>
         <div className="w-full mt-5">

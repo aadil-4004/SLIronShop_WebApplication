@@ -29,6 +29,8 @@ const EditInvoiceModal = ({ isOpen, closeModal, fetchInvoices, invoice }) => {
     status: 'Pending',
     lineItems: [{ description: '', quantity: '', price: '' }],
   });
+  const [customers, setCustomers] = useState([]);
+  const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
     if (invoice) {
@@ -41,6 +43,18 @@ const EditInvoiceModal = ({ isOpen, closeModal, fetchInvoices, invoice }) => {
       });
     }
   }, [invoice]);
+
+  useEffect(() => {
+    if (isOpen) {
+      axios.get('http://localhost:3001/api/customers')
+        .then(response => setCustomers(response.data))
+        .catch(error => console.error('Error fetching customers:', error));
+
+      axios.get('http://localhost:3001/api/jobs')
+        .then(response => setJobs(response.data))
+        .catch(error => console.error('Error fetching jobs:', error));
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,11 +110,21 @@ const EditInvoiceModal = ({ isOpen, closeModal, fetchInvoices, invoice }) => {
         <div className="space-y-4">
           <div>
             <Label htmlFor="customerID" value="Customer" />
-            <TextInput id="customerID" name="customerID" value={formData.customerID} onChange={handleChange} required />
+            <Select id="customerID" name="customerID" value={formData.customerID} onChange={handleChange} required>
+              <option value="">Select customer</option>
+              {customers.map(customer => (
+                <option key={customer.CustomerID} value={customer.CustomerID}>{customer.CustomerName}</option>
+              ))}
+            </Select>
           </div>
           <div>
-            <Label htmlFor="jobID" value="Job ID" />
-            <TextInput id="jobID" name="jobID" value={formData.jobID} onChange={handleChange} required />
+            <Label htmlFor="jobID" value="Job" />
+            <Select id="jobID" name="jobID" value={formData.jobID} onChange={handleChange} required>
+              <option value="">Select job</option>
+              {jobs.map(job => (
+                <option key={job.JobID} value={job.JobID}>{job.JobID}</option>
+              ))}
+            </Select>
           </div>
           <div>
             <Label htmlFor="date" value="Date" />

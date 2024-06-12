@@ -12,7 +12,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     maxWidth: '90%',
-    width: '500px',
+    width: '450px',
     maxHeight: '80%',
     overflowY: 'auto',
   },

@@ -4,7 +4,7 @@ import { Radio, Tabs, Label, Select, TextInput, Button } from 'flowbite-react';
 import AddNormalJobDetails from '../jobmodal/addnormaljobmodal';
 import AddCustomizedJobDetails from '../jobmodal/addcustomizedjobmodal';
 import axios from 'axios';
-import AddCustomerModal from '../customermodal/addcustomermodal'; // Import AddCustomerModal
+import AddCustomerModal from '../customermodal/addcustomermodal';
 
 const customStyles = {
   content: {
@@ -33,7 +33,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
     assignedEmployee: '',
   });
 
-  const [products, setProducts] = useState([{ product: '', quantity: '', rawMaterials: [] }]);
+  const [products, setProducts] = useState([{ product: '', quantity: '', rawMaterials: [], cost: 0 }]);
   const [productLoad, setProductLoad] = useState([]);
   const [productType, setProductType] = useState('Normal');
   const [rawMaterials, setRawMaterials] = useState([]);
@@ -42,7 +42,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [customers, setCustomers] = useState([]);
   const [image, setImage] = useState(null);
   const [customProductName, setCustomProductName] = useState('');
-  const [addCustomerModalIsOpen, setAddCustomerModalIsOpen] = useState(false); // State for AddCustomerModal
+  const [addCustomerModalIsOpen, setAddCustomerModalIsOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -62,7 +62,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           console.error('Error fetching raw materials:', error);
         });
 
-      fetchCustomers(); // Fetch customers when the modal is opened
+      fetchCustomers();
     }
   }, [isOpen]);
 
@@ -76,32 +76,27 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const calculateNormalProductCosts = async (products) => {
+    const updatedProducts = await Promise.all(products.map(async (product) => {
+      const rawMaterials = await Promise.all(product.rawMaterials.map(async (rm) => {
+        const batches = await fetchBatchesForRawMaterial(rm.material);
+        const unitPrice = batches.reduce((acc, batch) => acc + batch.UnitPrice, 0) / batches.length;
+        const cost = unitPrice * rm.quantity;
+        return { ...rm, cost };
+      }));
+      const totalCost = rawMaterials.reduce((acc, rm) => acc + rm.cost, 0);
+      return { ...product, rawMaterials, cost: totalCost };
+    }));
+    return updatedProducts;
+  };
+
+  const fetchBatchesForRawMaterial = async (materialId) => {
     try {
-      const jobData = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        jobData.append(key, value);
-      });
-
-      if (productType === 'Normal') {
-        jobData.append('products', JSON.stringify(products));
-      } else if (productType === 'Customized') {
-        jobData.append('rawMaterials', JSON.stringify(rawMaterials));
-        jobData.append('image', image);
-        jobData.append('customProductName', customProductName);
-      }
-
-      await axios.post('http://localhost:3001/api/jobs', jobData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      fetchJobs();
-      closeModal();
-      window.location.reload();
+      const response = await axios.get(`http://localhost:3001/api/rawmaterial/${materialId}/batches`);
+      return response.data;
     } catch (error) {
-      console.error('Error adding job:', error);
+      console.error('Error fetching batch data:', error);
+      return [];
     }
   };
 
@@ -126,7 +121,6 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
         });
         setProducts(updatedProductsWithRawMaterials);
 
-        // Fetch batches for each raw material
         const batchesPromises = rawMaterials.map((rm) => axios.get(`http://localhost:3001/api/rawmaterial/${rm.material}/batches`));
         const batchesResponses = await Promise.all(batchesPromises);
         const batchesData = batchesResponses.reduce((acc, response, idx) => {
@@ -166,8 +160,41 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const jobData = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        jobData.append(key, value);
+      });
+
+      if (productType === 'Normal') {
+        const updatedProducts = await calculateNormalProductCosts(products);
+        jobData.append('products', JSON.stringify(updatedProducts));
+      } else if (productType === 'Customized') {
+        const totalCost = rawMaterials.reduce((acc, rm) => acc + parseFloat(rm.cost), 0);
+        const updatedRawMaterials = rawMaterials.map(rm => ({ ...rm, cost: rm.cost || 0 }));
+        jobData.append('rawMaterials', JSON.stringify(updatedRawMaterials));
+        jobData.append('image', image);
+        jobData.append('customProductName', customProductName);
+        jobData.append('totalCost', totalCost);
+      }
+
+      await axios.post('http://localhost:3001/api/jobs', jobData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      fetchJobs();
+      closeModal();
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding job:', error);
+    }
+  };
+
   const addProduct = () => {
-    setProducts([...products, { product: '', quantity: '', rawMaterials: [] }]);
+    setProducts([...products, { product: '', quantity: '', rawMaterials: [], cost: 0 }]);
   };
 
   const removeProduct = (index) => {
@@ -176,7 +203,7 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   };
 
   const addRawMaterial = () => {
-    setRawMaterials([...rawMaterials, { material: '', quantity: '' }]);
+    setRawMaterials([...rawMaterials, { material: '', quantity: '', cost: 0 }]);
   };
 
   const removeRawMaterial = (index) => {

@@ -6,6 +6,7 @@ const multer = require('multer');
 
 router.use(cors());
 
+// Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');
@@ -17,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Fetch all jobs
+// Fetch all jobs with customer details
 router.get('/', (req, res) => {
   const query = `
     SELECT j.*, c.CustomerName 
@@ -52,7 +53,7 @@ router.put('/:jobId/status', (req, res) => {
 
 // Add a new job
 router.post('/', upload.single('image'), (req, res) => {
-  console.log('Request Body:', req.body); // Log the request body
+  console.log('Request Body:', req.body);
 
   const { dueDate, status, customerID, note, assignedEmployee, customProductName } = req.body;
   let products = [];
@@ -74,6 +75,7 @@ router.post('/', upload.single('image'), (req, res) => {
       return res.status(500).json({ error: 'Error starting transaction', details: transactionError });
     }
 
+    // Insert job details into the jobs table
     const jobQuery = 'INSERT INTO jobs (DueDate, Status, CustomerID, Note, EmployeeName) VALUES (?, ?, ?, ?, ?)';
     connection.query(jobQuery, [dueDate, status, customerID, note, assignedEmployee], (jobError, jobResults) => {
       if (jobError) {
@@ -85,12 +87,12 @@ router.post('/', upload.single('image'), (req, res) => {
 
       const jobID = jobResults.insertId;
 
-      // Add products or raw materials based on job type
+      // Handle normal product jobs
       if (products.length > 0) {
-        const productQueries = products.map(({ product, quantity, rawMaterials }) => {
+        const productQueries = products.map(({ product, quantity, rawMaterials, cost }) => {
           return new Promise((resolve, reject) => {
-            const productQuery = 'INSERT INTO NormalJob (JobID, ProductID, Quantity) VALUES (?, ?, ?)';
-            connection.query(productQuery, [jobID, product, quantity], async (productError) => {
+            const productQuery = 'INSERT INTO NormalJob (JobID, ProductID, Quantity, Cost) VALUES (?, ?, ?, ?)';
+            connection.query(productQuery, [jobID, product, quantity, cost], async (productError) => {
               if (productError) {
                 return reject(productError);
               }
@@ -132,20 +134,30 @@ router.post('/', upload.single('image'), (req, res) => {
               return res.status(500).json({ error: 'Error adding products', details: productError });
             });
           });
-      } else if (rawMaterials.length > 0) {
+      } else if (rawMaterials.length > 0) { // Handle customized product jobs
         const rawMaterialQueries = rawMaterials.map(({ material, quantity }) => {
           return new Promise((resolve, reject) => {
-            const rawMaterialQuery = 'INSERT INTO CustomJob (JobID, RawMaterialID, Quantity, CustomProductName, ImagePath) VALUES (?, ?, ?, ?, ?)';
-            connection.query(rawMaterialQuery, [jobID, material, quantity, customProductName, imagePath], (rawMaterialError) => {
-              if (rawMaterialError) {
-                return reject(rawMaterialError);
+            const query = 'SELECT UnitPrice FROM BatchRawMaterial WHERE RawMaterialID = ?';
+            connection.query(query, [material], (error, results) => {
+              if (error) {
+                return reject(error);
               }
 
-              allocateBatch(jobID, null, material, quantity, (allocationError) => {
-                if (allocationError) {
-                  return reject(allocationError);
+              const unitPrice = results.length > 0 ? results[0].UnitPrice : 0;
+              const cost = unitPrice * quantity;
+
+              const rawMaterialQuery = 'INSERT INTO CustomJob (JobID, RawMaterialID, Quantity, CustomProductName, ImagePath, Cost) VALUES (?, ?, ?, ?, ?, ?)';
+              connection.query(rawMaterialQuery, [jobID, material, quantity, customProductName, imagePath, cost], (rawMaterialError) => {
+                if (rawMaterialError) {
+                  return reject(rawMaterialError);
                 }
-                resolve();
+
+                allocateBatch(jobID, null, material, quantity, (allocationError) => {
+                  if (allocationError) {
+                    return reject(allocationError);
+                  }
+                  resolve();
+                });
               });
             });
           });
@@ -167,6 +179,7 @@ router.post('/', upload.single('image'), (req, res) => {
             return connection.rollback(() => {
               console.error('Error adding raw materials:', rawMaterialError);
               return res.status(500).json({ error: 'Error adding raw materials', details: rawMaterialError });
+           
             });
           });
       } else {
@@ -184,7 +197,7 @@ router.post('/', upload.single('image'), (req, res) => {
   });
 });
 
-// Function to allocate batches
+// Function to allocate batches for raw materials
 const allocateBatch = (jobID, productID, rawMaterialID, requiredQuantity, callback) => {
   const query = `SELECT BatchID, Quantity 
                  FROM BatchRawMaterial 

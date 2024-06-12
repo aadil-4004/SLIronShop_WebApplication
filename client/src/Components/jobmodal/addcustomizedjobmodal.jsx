@@ -20,7 +20,7 @@ const AddCustomizedJobDetails = ({ rawMaterials, setRawMaterials, rawMaterialLoa
       {rawMaterials.map((rawMaterial, index) => (
         <div key={index} className="mb-4 p-3 border rounded">
           <div className="flex space-x-3 mb-2">
-            <Label htmlFor={`rawMaterial-${index}`} value="Raw Material" className="w-1/5" />
+            <Label htmlFor={`rawMaterial-${index}`} value="Raw Material" className="w-1/10" />
             <Select
               id={`rawMaterial-${index}`}
               value={rawMaterial.material}

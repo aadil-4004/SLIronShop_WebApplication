@@ -73,8 +73,8 @@ const ShowroomNavbar = ({ activeItem }) => {
               </div>
               {showDropdown.orders && expanded && (
                 <div className="absolute left-full top-0 mt-1 w-[170px] bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                  <a href="/orders" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("invoices")}>
-                    Normal
+                  <a href="/invoices" className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg" onClick={() => setActiveLink("invoices")}>
+                    Invoice
                   </a>
                   <a href="/job" className="block px-4 py-2 hover:bg-gray-100 rounded-b-lg" onClick={() => setActiveLink("job")}>
                     Jobs
