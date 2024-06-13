@@ -63,22 +63,22 @@ const EditRawMaterialModal = ({ isOpen, closeModal, fetchRawMaterials, rawMateri
     };
 
     const handleSubmit = async (e) => {
-      e.preventDefault();
-      try {
-          // Only handle batch data, no need to update raw material
-          const newBatch = { 
-              ...batchData, 
-              RawMaterialID: rawMaterial.RawMaterialID 
-          };
-          await axios.post('http://localhost:3001/api/batchrawmaterial', newBatch);
-          
-          fetchRawMaterials();
-          closeModal();
-      } catch (error) {
-          console.error('Error updating raw material:', error);
-      }
-  };
-  
+        e.preventDefault();
+        try {
+            // Only handle batch data, no need to update raw material
+            const newBatch = { 
+                ...batchData, 
+                RawMaterialID: rawMaterial.RawMaterialID 
+            };
+            await axios.post('http://localhost:3001/api/batchrawmaterial', newBatch);
+            
+            fetchRawMaterials();
+            closeModal();
+        } catch (error) {
+            console.error('Error updating raw material:', error);
+        }
+    };
+
     return (
         <Modal
             isOpen={isOpen}

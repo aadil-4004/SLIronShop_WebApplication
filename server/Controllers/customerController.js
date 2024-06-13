@@ -8,43 +8,67 @@ router.use(cors());
 
 // Fetch all customers
 router.get('/', (req, res) => {
-    connection.query('SELECT * FROM customers', (error, results) => {
-        if (error) {
-            console.error('Error retrieving customers:', error);
-            res.status(500).json({ error: 'Error retrieving customers' });
-        } else {
-            res.json(results);
-        }
-    });
+  connection.query('SELECT * FROM customers', (error, results) => {
+    if (error) {
+      console.error('Error retrieving customers:', error);
+      res.status(500).json({ error: 'Error retrieving customers' });
+    } else {
+      res.json(results);
+    }
+  });
 });
 
 // Add a new customer
 router.post('/', (req, res) => {
-    const { customerName, email, contactNum, address } = req.body;
-    connection.query('INSERT INTO customers (CustomerName, Email, ContactNum, Address) VALUES (?, ?, ?, ?)',
-    [customerName, email, contactNum, address], (error, results) => {
-        if (error) {
-            console.error('Error adding customer:', error);
-            res.status(500).json({ error: 'Error adding customer' });
-        } else {
-            res.json({ message: 'Customer added successfully' });
-        }
-    });
+  const { customerName, email, contactNum, address } = req.body;
+  connection.query(
+    'INSERT INTO customers (CustomerName, Email, ContactNum, Address) VALUES (?, ?, ?, ?)',
+    [customerName, email, contactNum, address],
+    (error, results) => {
+      if (error) {
+        console.error('Error adding customer:', error);
+        res.status(500).json({ error: 'Error adding customer' });
+      } else {
+        res.json({ message: 'Customer added successfully' });
+      }
+    }
+  );
 });
 
 // Update an existing customer
 router.put('/:customerId', (req, res) => {
-    const customerId = req.params.customerId;
-    const { customerName, email, contactNum, address } = req.body;
-    connection.query('UPDATE customers SET CustomerName = ?, Email = ?, ContactNum = ?, Address = ? WHERE CustomerID = ?',
-    [customerName, email, contactNum, address, customerId], (error, results) => {
-        if (error) {
-            console.error('Error updating customer:', error);
-            res.status(500).json({ error: 'Error updating customer' });
-        } else {
-            res.json({ message: 'Customer updated successfully' });
-        }
-    });
+  const customerId = req.params.customerId;
+  const { customerName, email, contactNum, address } = req.body;
+  connection.query(
+    'UPDATE customers SET CustomerName = ?, Email = ?, ContactNum = ?, Address = ? WHERE CustomerID = ?',
+    [customerName, email, contactNum, address, customerId],
+    (error, results) => {
+      if (error) {
+        console.error('Error updating customer:', error);
+        res.status(500).json({ error: 'Error updating customer' });
+      } else {
+        res.json({ message: 'Customer updated successfully' });
+      }
+    }
+  );
+});
+
+// Fetch jobs by CustomerID
+router.get('/:customerId/jobs', (req, res) => {
+  const customerId = req.params.customerId;
+  const query = `
+    SELECT j.JobID, j.DueDate, j.Status, j.Note, j.EmployeeName
+    FROM jobs j
+    WHERE j.CustomerID = ?
+  `;
+  connection.query(query, [customerId], (error, results) => {
+    if (error) {
+      console.error('Error retrieving jobs for customer:', error);
+      res.status(500).json({ error: 'Error retrieving jobs for customer' });
+    } else {
+      res.json(results);
+    }
+  });
 });
 
 module.exports = router;

@@ -18,10 +18,10 @@ router.get('/', (req, res) => {
 });
 
 // Add a new batch
-router.post('/',(req, res) => {
+router.post('/', (req, res) => {
     const { RawMaterialID, Quantity, UnitPrice, DateReceived, SupplierID } = req.body;
-    const query = 'INSERT INTO batchrawmaterial (RawMaterialID, Quantity, UnitPrice, DateReceived, SupplierID, LastUpdate) VALUES (?, ?, ?, ?, ?,?)';
-    const params = [RawMaterialID, Quantity, UnitPrice, DateReceived, SupplierID,new Date()];
+    const query = 'INSERT INTO batchrawmaterial (RawMaterialID, Quantity, Received, UnitPrice, DateReceived, SupplierID, LastUpdate) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const params = [RawMaterialID, Quantity, Quantity, UnitPrice, DateReceived, SupplierID, new Date()];
     connection.query(query, params, (error, results) => {
         if (error) {
             console.error('Error adding batch:', error);

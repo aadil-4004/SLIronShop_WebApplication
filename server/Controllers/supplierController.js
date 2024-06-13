@@ -64,4 +64,22 @@ router.get('/rawtypes', (req, res) => {
     });
 });
 
+// Fetch batch details for a specific supplier
+router.get('/suppliers/:supplierId/batches', (req, res) => {
+    const supplierId = req.params.supplierId;
+    const query = `
+        SELECT BatchID, Quantity, Received, UnitPrice, DateReceived
+        FROM batchrawmaterial
+        WHERE SupplierID = ?
+    `;
+    connection.query(query, [supplierId], (error, results) => {
+        if (error) {
+            console.error('Error retrieving batch details:', error);
+            res.status(500).json({ error: 'Error retrieving batch details' });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
 module.exports = router;
