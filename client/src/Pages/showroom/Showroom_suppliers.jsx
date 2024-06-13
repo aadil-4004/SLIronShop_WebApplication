@@ -128,7 +128,7 @@ const Showroom_suppliers = () => {
                             <Table className="min-w-full divide-y divide-gray-200">
                               <TableHead>
                                   <TableHeadCell>Batch ID</TableHeadCell>
-                                  <TableHeadCell>Quantity</TableHeadCell>
+                                  <TableHeadCell>Raw Material Name</TableHeadCell>
                                   <TableHeadCell>Received</TableHeadCell>
                                   <TableHeadCell>Unit Price</TableHeadCell>
                                   <TableHeadCell>Date Received</TableHeadCell>
@@ -137,7 +137,7 @@ const Showroom_suppliers = () => {
                                 {batchDetails[supplier.SupplierID].map((batch, index) => (
                                   <TableRow key={index}>
                                     <TableCell>{batch.BatchID}</TableCell>
-                                    <TableCell>{batch.Quantity}</TableCell>
+                                    <TableCell>{batch.RawMaterial}</TableCell>
                                     <TableCell>{batch.Received}</TableCell>
                                     <TableCell>{batch.UnitPrice}</TableCell>
                                     <TableCell>{new Date(batch.DateReceived).toLocaleDateString()}</TableCell>

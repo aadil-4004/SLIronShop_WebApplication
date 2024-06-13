@@ -18,12 +18,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+
 // Fetch all jobs with customer details
 router.get('/', (req, res) => {
   const query = `
     SELECT j.*, c.CustomerName 
     FROM jobs j 
     JOIN customers c ON j.CustomerID = c.CustomerID
+    ORDER BY j.JobID
   `;
   connection.query(query, (error, results) => {
     if (error) {
@@ -34,6 +36,7 @@ router.get('/', (req, res) => {
     }
   });
 });
+
 
 // Update job status
 router.put('/:jobId/status', (req, res) => {

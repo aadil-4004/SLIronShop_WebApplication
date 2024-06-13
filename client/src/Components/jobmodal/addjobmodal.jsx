@@ -43,6 +43,8 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
   const [image, setImage] = useState(null);
   const [customProductName, setCustomProductName] = useState('');
   const [addCustomerModalIsOpen, setAddCustomerModalIsOpen] = useState(false);
+  const [customerPhoneNumber, setCustomerPhoneNumber] = useState('');
+  const [customerDetails, setCustomerDetails] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -74,6 +76,17 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
       .catch(error => {
         console.error('Error fetching customers:', error);
       });
+  };
+
+  const fetchCustomerByPhoneNumber = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/customers/phone/${customerPhoneNumber}`);
+      setCustomerDetails(response.data);
+      setFormData({ ...formData, customerID: response.data.CustomerID });
+    } catch (error) {
+      console.error('Error fetching customer by phone number:', error);
+      setCustomerDetails(null);
+    }
   };
 
   const calculateNormalProductCosts = async (products) => {
@@ -219,21 +232,28 @@ const AddJobModal = ({ isOpen, closeModal, fetchJobs }) => {
           <Tabs.Tab title="Job Details">
             <div className="space-y-3 mt-3">
               <div>
-                <Label htmlFor="customerID" value="Customer Name" className="mb-2 block" />
-                <Select
-                  id="customerID"
-                  name="customerID"
-                  value={formData.customerID}
-                  onChange={(e) => setFormData({ ...formData, customerID: e.target.value })}
-                  required
-                >
-                  <option value="">Select customer</option>
-                  {customers.map(customer => (
-                    <option key={customer.CustomerID} value={customer.CustomerID}>
-                      {customer.CustomerName}
-                    </option>
-                  ))}
-                </Select>
+                <Label htmlFor="customerPhoneNumber" value="Customer Phone Number" className="mb-2 block" />
+                <div className="flex items-center">
+                  <TextInput
+                    id="customerPhoneNumber"
+                    name="customerPhoneNumber"
+                    type="text"
+                    placeholder="Enter customer phone number"
+                    value={customerPhoneNumber}
+                    onChange={(e) => setCustomerPhoneNumber(e.target.value)}
+                  />
+                  <Button onClick={fetchCustomerByPhoneNumber} className="ml-2">Search</Button>
+                </div>
+                {customerDetails && (
+                  <div className="mt-2 py-2 flex justify-between">
+                    <div> 
+                      <p><strong>Customer Name:</strong> {customerDetails.CustomerName}</p>
+                    </div>
+                    <div className='text-right'>
+                      <strong>Customer ID:</strong> {customerDetails.CustomerID}
+                    </div>
+                  </div>
+                )}
                 <Button onClick={() => setAddCustomerModalIsOpen(true)} color="light" className="mt-2">
                   Add New Customer
                 </Button>

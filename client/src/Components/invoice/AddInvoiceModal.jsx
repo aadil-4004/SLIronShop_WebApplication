@@ -23,7 +23,6 @@ const customStyles = {
 
 const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
   const [formData, setFormData] = useState({
-    customerID: '',
     jobID: '',
     status: 'Pending',
     discount: 0,
@@ -34,42 +33,39 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
   const [jobDetails, setJobDetails] = useState(null);
   const [totalMRP, setTotalMRP] = useState(0);
   const [totalBillAmount, setTotalBillAmount] = useState(0);
+  const [jobSearch, setJobSearch] = useState('');
+  const [selectedJob, setSelectedJob] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-      axios.get('http://localhost:3001/api/customers')
-        .then(response => setCustomers(response.data))
-        .catch(error => console.error('Error fetching customers:', error));
+      fetchJobs();
     }
   }, [isOpen]);
 
-  const handleCustomerChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-
-    axios.get(`http://localhost:3001/api/invoices/jobs/customer/${value}`)
+  const fetchJobs = () => {
+    axios.get('http://localhost:3001/api/jobs')
       .then(response => setJobs(response.data))
       .catch(error => console.error('Error fetching jobs:', error));
   };
 
-  const handleJobChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  const handleSearchJob = () => {
+    const job = jobs.find(job => job.JobID === parseInt(jobSearch));
+    if (job) {
+      setSelectedJob(job);
+      setFormData({ ...formData, jobID: job.JobID });
+      fetchJobDetails(job.JobID);
+    } else {
+      setSelectedJob(null);
+      setJobDetails(null);
+    }
+  };
 
-    axios.get(`http://localhost:3001/api/invoices/jobdetails/${value}`)
+  const fetchJobDetails = (jobID) => {
+    axios.get(`http://localhost:3001/api/invoices/jobdetails/${jobID}`)
       .then(response => {
         const { products, customProduct, batches } = response.data;
-
         const uniqueProducts = Array.from(new Set(products.map(p => p.ProductName)))
-          .map(name => {
-            return products.find(p => p.ProductName === name);
-          });
+          .map(name => products.find(p => p.ProductName === name));
 
         setJobDetails({
           products: uniqueProducts,
@@ -196,7 +192,6 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
           grossProfit: parseFloat(jobDetails.customProduct.MRP) - (parseFloat(jobDetails.customProduct.Cost) + parseFloat(jobDetails.customProduct.WorkmanCharge)),
         }] : [])
       ];
-      
 
       const invoiceData = {
         ...formData,
@@ -221,25 +216,29 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
       <form onSubmit={handleSubmit}>
         <div className="space-y-3 mt-3">
           <div className="flex justify-between">
-            <div className="w-1/2 pr-2">
-              <Label htmlFor="customerID" value="Customer" />
-              <Select id="customerID" name="customerID" value={formData.customerID} onChange={handleCustomerChange} required>
-                <option value="">Select customer</option>
-                {customers.map(customer => (
-                  <option key={customer.CustomerID} value={customer.CustomerID}>{customer.CustomerName}</option>
-                ))}
-              </Select>
-            </div>
-            <div className="w-1/2 pl-2">
-              <Label htmlFor="jobID" value="Job" />
-              <Select id="jobID" name="jobID" value={formData.jobID} onChange={handleJobChange} required>
-                <option value="">Select job</option>
-                {jobs.map(job => (
-                  <option key={job.JobID} value={job.JobID}>
-                    {job.JobID} - Due Date: {new Date(job.DueDate).toLocaleDateString()}
-                  </option>
-                ))}
-              </Select>
+            <div className="w-full">
+              <Label htmlFor="jobSearch" value="Search Job by Job ID" />
+              <div className="flex">
+                <TextInput
+                  id="jobSearch"
+                  type="text"
+                  placeholder="Enter Job ID"
+                  value={jobSearch}
+                  onChange={(e) => setJobSearch(e.target.value)}
+                />
+                <Button onClick={handleSearchJob} className="ml-2">Search</Button>
+              </div>
+              {selectedJob && (
+                <div className="mt-3 flex justify-between">
+                  <div>
+                    <p><strong>Customer Name:</strong> {selectedJob.CustomerName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p><strong>Job ID:</strong> {selectedJob.JobID}</p>
+                    <p><strong>Due Date:</strong> {new Date(selectedJob.DueDate).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div>

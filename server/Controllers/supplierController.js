@@ -68,10 +68,11 @@ router.get('/rawtypes', (req, res) => {
 router.get('/suppliers/:supplierId/batches', (req, res) => {
     const supplierId = req.params.supplierId;
     const query = `
-        SELECT BatchID, Quantity, Received, UnitPrice, DateReceived
-        FROM batchrawmaterial
-        WHERE SupplierID = ?
-    `;
+        SELECT b.BatchID, b.Quantity, b.Received, b.UnitPrice, b.DateReceived, r.RawMaterial
+    FROM batchrawmaterial b
+    JOIN rawmaterial r ON b.RawMaterialID = r.RawMaterialID
+    WHERE b.SupplierID = ?
+  `;
     connection.query(query, [supplierId], (error, results) => {
         if (error) {
             console.error('Error retrieving batch details:', error);

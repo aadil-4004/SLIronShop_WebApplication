@@ -18,6 +18,22 @@ router.get('/', (req, res) => {
   });
 });
 
+// Fetch customer by phone number
+router.get('/phone/:phone', (req, res) => {
+  const phone = req.params.phone;
+  const query = 'SELECT * FROM customers WHERE ContactNum = ?';
+  connection.query(query, [phone], (error, results) => {
+    if (error) {
+      console.error('Error retrieving customer by phone number:', error);
+      res.status(500).json({ error: 'Error retrieving customer by phone number' });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: 'Customer not found' });
+    } else {
+      res.json(results[0]);
+    }
+  });
+});
+
 // Add a new customer
 router.post('/', (req, res) => {
   const { customerName, email, contactNum, address } = req.body;
