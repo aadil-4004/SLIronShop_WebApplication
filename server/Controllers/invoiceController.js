@@ -62,6 +62,8 @@ router.get('/:invoiceId/lineitems', (req, res) => {
   });
 });
 
+
+
 // Add a new invoice
 router.post('/', (req, res) => {
   const { customerID, jobID, status, totalAmount, discountAmount, totalBillAmount, advancePayment, balance, lineItems } = req.body;
@@ -189,6 +191,7 @@ router.get('/jobdetails/:jobId', (req, res) => {
     }
   });
 });
+
 
 // Update an existing invoice
 router.put('/:invoiceId', (req, res) => {

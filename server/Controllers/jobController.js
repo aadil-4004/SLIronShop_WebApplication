@@ -71,6 +71,30 @@ router.get('/due-dates', (req, res) => {
   });
 });
 
+// In your backend route file (e.g., routes/jobs.js or similar)
+router.get('/status-counts', async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS pending,
+        COUNT(CASE WHEN Status = 'In Progress' THEN 1 END) AS inProgress,
+        COUNT(CASE WHEN Status = 'Completed' THEN 1 END) AS completed
+      FROM jobs
+    `;
+    connection.query(query, (error, results) => {
+      if (error) {
+        console.error('Error retrieving job status counts:', error);
+        res.status(500).json({ error: 'Error retrieving job status counts' });
+      } else {
+        res.json(results[0]);
+      }
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Add a new job
 router.post('/', upload.single('image'), (req, res) => {
   console.log('Request Body:', req.body);

@@ -27,9 +27,9 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
     status: 'Pending',
     discount: 0,
     advancePayment: 0,
+    customerID: '',
   });
   const [jobs, setJobs] = useState([]);
-  const [customers, setCustomers] = useState([]);
   const [jobDetails, setJobDetails] = useState(null);
   const [totalMRP, setTotalMRP] = useState(0);
   const [totalBillAmount, setTotalBillAmount] = useState(0);
@@ -52,7 +52,7 @@ const AddInvoiceModal = ({ isOpen, closeModal, fetchInvoices }) => {
     const job = jobs.find(job => job.JobID === parseInt(jobSearch));
     if (job) {
       setSelectedJob(job);
-      setFormData({ ...formData, jobID: job.JobID });
+      setFormData({ ...formData, jobID: job.JobID, customerID: job.CustomerID });
       fetchJobDetails(job.JobID);
     } else {
       setSelectedJob(null);

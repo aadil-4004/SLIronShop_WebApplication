@@ -28,6 +28,31 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/low-stock-raw-materials', (req, res) => {
+    const query = `
+      SELECT 
+        rm.RawMaterialID, 
+        rm.RawMaterial, 
+        rm.LastUpdate, 
+        rm.RawType, 
+        COALESCE(SUM(brm.Quantity), 0) AS CurrentStock
+      FROM rawmaterial rm
+      LEFT JOIN batchrawmaterial brm ON rm.RawMaterialID = brm.RawMaterialID
+      GROUP BY rm.RawMaterialID, rm.RawMaterial, rm.LastUpdate, rm.RawType
+      HAVING CurrentStock < 10
+      ORDER BY CurrentStock
+    `;
+    connection.query(query, (error, results) => {
+      if (error) {
+        console.error('Error fetching low stock raw materials:', error);
+        res.status(500).json({ error: 'Error fetching low stock raw materials' });
+      } else {
+        res.json(results);
+      }
+    });
+  });
+  
+
 // Add a new raw material
 router.post('/', (req, res) => {
     const { rawMaterial, rawType } = req.body;
