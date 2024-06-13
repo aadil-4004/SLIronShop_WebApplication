@@ -54,6 +54,23 @@ router.put('/:jobId/status', (req, res) => {
   });
 });
 
+// Fetch due dates for all jobs
+router.get('/due-dates', (req, res) => {
+  const query = `
+    SELECT j.JobID, j.DueDate, c.CustomerName 
+    FROM jobs j 
+    JOIN customers c ON j.CustomerID = c.CustomerID
+  `;
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('Error retrieving due dates:', error);
+      res.status(500).json({ error: 'Error retrieving due dates' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 // Add a new job
 router.post('/', upload.single('image'), (req, res) => {
   console.log('Request Body:', req.body);

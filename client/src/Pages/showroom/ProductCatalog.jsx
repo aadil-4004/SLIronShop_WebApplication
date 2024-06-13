@@ -7,7 +7,7 @@ import AddProductModal from '../../Components/productmodal/addproductmodal';
 import { HiPlus } from "react-icons/hi";
 import { Button } from "flowbite-react";
 
-const ShowroomDashboard = () => {
+const ProductCatalog = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -113,4 +113,4 @@ const ShowroomDashboard = () => {
   );
 };
 
-export default ShowroomDashboard;
+export default ProductCatalog;

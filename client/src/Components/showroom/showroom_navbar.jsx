@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HiChevronDown } from "react-icons/hi";
+import { HiChevronDown, HiOutlineChartPie } from "react-icons/hi";
 import billicon from '../../Assets/icons/select/pos.png';
 import invicon_n from '../../Assets/icons/non-select/inventory.png';
 import ordersicon_n from '../../Assets/icons/non-select/orders.png';
@@ -38,9 +38,19 @@ const ShowroomNavbar = ({ activeItem }) => {
         <div>
           <img src={usericon} alt="User" className={`p-3 mt-8 mb-10 w-20`} />
           <div className={`flex flex-col ${expanded ? 'items-start' : 'items-center'} `}>
+            
+             <div className='mb-5'>
+              <a href="/dashboard" onClick={() => setActiveLink("dashboard")} >
+                <div className={`flex p-3 ${activeLink === "dashboard" ? 'bg-[#0096FF]' : 'hover:bg-[#0096FF]'} rounded-lg ${expanded ? 'w-[170px]' : 'w-[50px] border-[1px] border-transparent'} ${expanded && activeLink !== "dashboard" ? 'border-[1px] border-gray-200' : ''} transition-all duration-500 ease-in-out`}>
+                <HiOutlineChartPie className="text-2xl" />                  
+                <span className={`flex-grow text-center transition-opacity ${expanded ? 'duration-[400ms] opacity-100 max-w-full' : 'duration-0 opacity-0 max-w-0'}`}>Dashboard</span>
+                </div>
+              </a>
+            </div>
+
             <div className='mb-5'>
-              <a href="/dashboard" onClick={() => setActiveLink("billing")} >
-                <div className={`flex p-3 ${activeLink === "billing" ? 'bg-[#AAD8E6]' : 'hover:bg-[#ADD8E6]'} rounded-lg ${expanded ? 'w-[170px]' : 'w-[50px] border-[1px] border-transparent'} ${expanded && activeLink !== "billing" ? 'border-[1px] border-gray-200' : ''} transition-all duration-500 ease-in-out`}>
+              <a href="/productcatalog" onClick={() => setActiveLink("billing")} >
+                <div className={`flex p-3 ${activeLink === "billing" ? 'bg-[#0096FF]' : 'hover:bg-[#0096FF]'} rounded-lg ${expanded ? 'w-[170px]' : 'w-[50px] border-[1px] border-transparent'} ${expanded && activeLink !== "billing" ? 'border-[1px] border-gray-200' : ''} transition-all duration-500 ease-in-out`}>
                   <img src={billicon} alt="Billing" />
                   <span className={`flex-grow text-center transition-opacity ${expanded ? 'duration-[400ms] opacity-100 max-w-full' : 'duration-0 opacity-0 max-w-0'}`}>Catalogue</span>
                 </div>
@@ -86,7 +96,7 @@ const ShowroomNavbar = ({ activeItem }) => {
             <div className='mb-5 relative' onMouseEnter={() => handleDropdownMouseEnter("customers")} onMouseLeave={() => handleDropdownMouseLeave("customers")}>
               <div className={`flex p-3 ${activeLink === "customers" ? 'bg-[#0096FF]' : 'hover:bg-[#0096FF]'} rounded-lg ${expanded ? 'w-[170px]' : 'w-[50px] border-[1px] border-transparent'} ${expanded && activeLink !== "customers" ? 'border-[1px] border-gray-200' : ''} transition-all duration-500 ease-in-out cursor-pointer`}>
                 <img src={customersicon_n} alt="Customers" />
-                <span className={`flex-grow text-center transition-opacity ${expanded ? 'duration-[400ms] opacity-100 max-w-full' : 'duration-0 opacity-0 max-w-0'}`}>Customers</span>
+                <span className={`flex-grow text-center transition-opacity ${expanded ? 'duration-[400ms] opacity-100 max-w-full' : 'duration-0 opacity-0 max-w-0'}`}>Info</span>
                 <HiChevronDown className={`ml-2 transition-opacity ${expanded ? 'opacity-100' : 'opacity-0'}`} />
               </div>
               {showDropdown.customers && expanded && (
