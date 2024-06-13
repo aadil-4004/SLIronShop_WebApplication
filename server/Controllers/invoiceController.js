@@ -23,6 +23,28 @@ router.get('/', (req, res) => {
   });
 });
 
+// Assuming you have a customer table with CustomerID and Email columns
+router.get('/invoices/:invoiceId/details', (req, res) => {
+  const invoiceId = req.params.invoiceId;
+
+  const query = `
+    SELECT i.*, c.Email as CustomerEmail
+    FROM invoices i
+    JOIN customers c ON i.CustomerID = c.CustomerID
+    WHERE i.InvoiceID = ?
+  `;
+
+  connection.query(query, [invoiceId], (error, results) => {
+    if (error) {
+      console.error('Error fetching invoice details:', error);
+      res.status(500).json({ error: 'Error fetching invoice details' });
+    } else {
+      res.json(results[0]);
+    }
+  });
+});
+
+
 // Fetch an invoice by ID
 router.get('/:invoiceId', (req, res) => {
   const invoiceId = req.params.invoiceId;
